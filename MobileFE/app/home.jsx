@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from "react-native";
 
-export default function RozvrhScreen() {
+export default function Home() {
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
