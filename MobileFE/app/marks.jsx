@@ -4,7 +4,7 @@ import React from 'react'
 const marks = () => {
   return (
     <View>
-      <Text>marks</Text>
+      <Text>marks test</Text>
     </View>
   )
 }
