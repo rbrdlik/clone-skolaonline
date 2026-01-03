@@ -17,9 +17,18 @@ const { swaggerDocs } = require('./swagger');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
-const gradesRouter = require('./routes/grades');
 
-var app = express();
+const authRouter = require("./routes/auth");
+const userRouter = require("./routes/user");
+const classRouter = require("./routes/class");
+const groupRouter = require("./routes/group");
+const subjectRouter = require("./routes/subject");
+const gradeRouter = require("./routes/grade");
+const scheduleRouter = require("./routes/schedule");
+const scheduleChangesRouter = require("./routes/scheduleChanges");
+const messageRouter = require("./routes/message");
+
+const app = express();
 
 swaggerDocs(app);
 
@@ -35,7 +44,15 @@ app.use(cors());
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-app.use('/grades', gradesRouter);
+app.use("/auth", authRouter);
+app.use("/user", userRouter);
+app.use("/class", classRouter);
+app.use("/group", groupRouter);
+app.use("/grade", gradeRouter);
+app.use("/subject", subjectRouter);
+app.use("/schedule", scheduleRouter);
+app.use("/schedule-changes", scheduleChangesRouter);
+app.use("/message", messageRouter);
 
 app.use(function(req, res, next) {
   next(createError(404));

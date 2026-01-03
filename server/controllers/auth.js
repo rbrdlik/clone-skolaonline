@@ -1,10 +1,7 @@
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const {
-  generateAccessToken,
-  generateRefreshToken
-} = require("../utils/token");
+const { generateAccessToken, generateRefreshToken } = require("../utils/token");
 
 exports.register = async (req, res) => {
   try {
@@ -14,7 +11,7 @@ exports.register = async (req, res) => {
 
     const user = await User.create({
       ...rest,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     res.status(201).json({ message: "User created" });
@@ -59,15 +56,14 @@ exports.refreshToken = async (req, res) => {
 exports.logout = async (req, res) => {
   const { refreshToken } = req.body;
 
-  await User.findOneAndUpdate(
-    { refreshToken },
-    { refreshToken: null }
-  );
+  await User.findOneAndUpdate({ refreshToken }, { refreshToken: null });
 
   res.sendStatus(204);
 };
 
 exports.me = async (req, res) => {
-  const user = await User.findById(req.user.id).select("-password -refreshToken");
+  const user = await User.findById(req.user.id).select(
+    "-password -refreshToken"
+  );
   res.json(user);
 };
