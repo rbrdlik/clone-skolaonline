@@ -1,7 +1,10 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from "react-native";
 
-export default function Home() {
+
+
+export default function Index() {
   return (
+    
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         
@@ -12,11 +15,11 @@ export default function Home() {
               source={{ uri: "https://cdn-icons-png.flaticon.com/512/1946/1946429.png" }}
               style={styles.avatar}
             />
-            <Text style={styles.username}>Roman Brdlík</Text>
+            <Text style={styles.username}>Rozvrh hodin</Text>
           </View>
 
           <TouchableOpacity>
-            <Text style={styles.settingsIcon}>⚙️</Text>
+            <Text style={styles.settingsIcon}><Image></Image></Text>
           </TouchableOpacity>
         </View>
 
@@ -31,74 +34,34 @@ export default function Home() {
         <View style={styles.daysRow}>
           {renderDay("Po", 12)}
           {renderDay("Út", 13)}
-          {renderDay("St", 14, true)}
+          {renderDay("St", 14)}
           {renderDay("Čt", 15)}
           {renderDay("Pá", 16)}
         </View>
 
-        {/* Lessons */}
-        {renderLesson({
-          index: "0",
-          subject: "Konzultace",
-          teacher: "Lišková I.",
-          room: "Učebna: 052",
-          classInfo: "Třídy: 1A1, 1B1…",
-          time: "7:05 - 7:50",
-          color: "#EEF3FF"
-        })}
 
-        {renderLesson({
-          index: "1",
-          subject: "Český jazyk a literatura",
-          teacher: "Svárovská V.",
-          room: "Učebna: 052",
-          classInfo: "Celá třída",
-          time: "7:55 - 8:40",
-          color: "#E9F9FF"
-        })}
-
-        {renderLesson({
-          index: "2-3",
-          subject: "Programování",
-          teacher: "Pelíkán R.",
-          room: "Učebna: 030",
-          classInfo: "Skupina IT1",
-          time: "8:45 - 10:35",
-          color: "#FFD7D7",
-          bold: true
-        })}
-
-        {renderLesson({
-          index: "4",
-          subject: "Matematika",
-          teacher: "Lišková I.",
-          room: "Učebna: 053",
-          classInfo: "Celá třída",
-          time: "10:40 - 11:25",
-          color: "#F1F1F1"
-        })}
-
-        {renderLesson({
-          index: "5",
-          subject: "Anglický jazyk",
-          teacher: "Švábová Š.",
-          room: "Učebna: 060",
-          classInfo: "Skupina ANJ2",
-          time: "11:30 - 12:15",
-          color: "#DDDDDD",
-          dimmed: true
-        })}
 
       </ScrollView>
 
       {/* Bottom Navbar */}
-      <View style={styles.navbar}>
-        {renderNav("Zprávy")}
-        {renderNav("Absence")}
-        {renderNav("Rozvrh", true)}
-        {renderNav("Hodnocení")}
-        {renderNav("Úkoly")}
+      <View style={styles.navWrapper}>
+        <View style={styles.navBar}>
+
+        <TouchableOpacity style={styles.navItem}>
+          <Text style={styles.icon}>💬</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.navCenter}>
+          <Text style={styles.centerIcon}>📅</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.navItem}>
+          <Text style={styles.icon}>⭐</Text>
+        </TouchableOpacity>
+
+        </View>
       </View>
+
     </View>
   );
 }
@@ -112,11 +75,11 @@ function renderDay(label, num, active = false) {
   );
 }
 
-function renderLesson({ index, subject, teacher, room, classInfo, time, color, bold, dimmed }) {
+function renderLesson({ subject, teacher, room, classInfo, time, color, bold, dimmed }) {
   return (
     <View style={[styles.lesson, { backgroundColor: color }, dimmed && styles.dimmed]}>
-      <View style={styles.lessonIndexBox}>
-        <Text style={styles.lessonIndex}>{index}</Text>
+      <View style={styles.lessonIdBox}>
+        
       </View>
 
       <View style={styles.lessonInfo}>
@@ -168,7 +131,7 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   dayBox: {
-    width: 55,
+    width: "19%",
     height: 70,
     borderRadius: 15,
     backgroundColor: "#F1F1F1",
@@ -176,7 +139,7 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   dayBoxActive: {
-    backgroundColor: "#7d8aff"
+    backgroundColor: "#4C8DEF"
   },
   dayLabel: { fontSize: 14, color: "#333" },
   dayLabelActive: { color: "#fff" },
@@ -189,11 +152,12 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     padding: 15,
     borderRadius: 20,
-    alignItems: "center"
+    alignItems: "center",
+    
   },
   dimmed: { opacity: 0.6 },
 
-  lessonIndexBox: {
+  lessonIdBox: {
     width: 50,
     height: 50,
     borderRadius: 15,
@@ -202,7 +166,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 15
   },
-  lessonIndex: { fontSize: 20, fontWeight: "700" },
+  lessonId: { fontSize: 20, fontWeight: "700" },
 
   lessonInfo: { flex: 1 },
   lessonTitle: { fontSize: 18, fontWeight: "600" },
@@ -211,15 +175,55 @@ const styles = StyleSheet.create({
   lessonDetails: { marginTop: 3, color: "#555" },
   lessonTime: { marginTop: 5, color: "#777" },
 
-  navbar: {
+   navWrapper: {
+    position: "absolute",
+    bottom: 20,
+    width: "100%",
+    alignItems: "center"
+  },
+
+  navBar: {
+    width: "70%",
     height: 70,
+    backgroundColor: "#fff",
+    borderRadius: 35,
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    borderTopWidth: 1,
-    borderColor: "#e1e1e1"
+
+    
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 5 },
+    shadowRadius: 10,
+    elevation: 8
   },
-  navItem: { alignItems: "center" },
-  navText: { fontSize: 12, color: "#888" },
-  navTextActive: { color: "#000", fontWeight: "700" }
+
+  navItem: {
+    width: 50,
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+
+  icon: {
+    fontSize: 20
+  },
+
+  navCenter: {
+    width: "30%",
+    height: "60%",
+    borderRadius: 32,
+    backgroundColor: "#4C8DEF",
+    justifyContent: "center",
+    alignItems: "center",
+     
+  },
+
+  centerIcon: {
+    fontSize: 28,
+    color: "#fff"
+    
+  },
+  
 });
