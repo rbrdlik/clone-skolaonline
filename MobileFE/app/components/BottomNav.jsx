@@ -6,7 +6,7 @@ import {
   Animated,
   Dimensions,
 } from "react-native";
-import { Link, usePathname } from "expo-router";
+import { useRouter, usePathname, useSegments, Link } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -15,6 +15,7 @@ const ITEM_COUNT = 3;
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const segments = useSegments();
   const translateX = useRef(new Animated.Value(0)).current;
 
   const screenWidth = Dimensions.get("window").width;
@@ -22,9 +23,10 @@ export default function BottomNav() {
   const itemWidth = navWidth / ITEM_COUNT;
 
   const getIndexFromPath = () => {
-    if (pathname === "/messages") return 0;
-    if (pathname === "/") return 1;
-    if (pathname === "/grades") return 2;
+    const currentPath = pathname || segments.join("/") || "/";
+    if (currentPath === "/messages" || currentPath?.startsWith("/messages")) return 0;
+    if (currentPath === "/rozvrh" || currentPath?.startsWith("/rozvrh")) return 1;
+    if (currentPath === "/znamky" || currentPath?.startsWith("/znamky")) return 2;
     return 1;
   };
 
@@ -35,7 +37,7 @@ export default function BottomNav() {
       speed: 20,
       bounciness: 8,
     }).start();
-  }, [pathname]);
+  }, [pathname, itemWidth]);
 
   return (
     <View style={styles.navWrapper}>
@@ -51,18 +53,32 @@ export default function BottomNav() {
         />
 
         <NavItem href="/messages" iconName="chatbubble" />
-        <NavItem href="/" iconName="calendar" />
-        <NavItem href="/grades" iconName="star" />
+        <NavItem href="/rozvrh" iconName="calendar" />
+        <NavItem href="/znamky" iconName="star" />
       </View>
     </View>
   );
 }
 
 function NavItem({ href, iconName }) {
+  const pathname = usePathname();
+  const segments = useSegments();
+  
+  const currentPath = pathname || segments.join("/") || "/";
+  const isActive = currentPath === href || 
+                   (href !== '/' && currentPath?.startsWith(href));
+
   return (
     <Link href={href} asChild>
-      <TouchableOpacity style={styles.navItem}>
-        <Ionicons name={iconName} size={24} color="black" />
+      <TouchableOpacity 
+        style={styles.navItem}
+        activeOpacity={0.7}
+      >
+        <Ionicons 
+          name={iconName} 
+          size={24} 
+          color={isActive ? "#7d8aff" : "black"} 
+        />
       </TouchableOpacity>
     </Link>
   );
@@ -85,7 +101,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     overflow: "hidden",
-    boxShadow: "0px 5px 10px rgba(0, 0, 0, 0.15)",
+    // iOS shadow
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    // Android shadow
     elevation: 8,
   },
 
