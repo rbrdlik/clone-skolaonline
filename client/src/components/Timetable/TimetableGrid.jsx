@@ -1,7 +1,9 @@
+import React from "react";
 import { startOfWeek, addDays, format } from "date-fns";
 import cs from "date-fns/locale/cs";
 import TimetableCell from "./TimetableCell";
 import { mockLessons } from "./mockLessons";
+import calendar from "../../assets/icons/calendar.png"
 
 const HOURS = [
   "7:05–7:50",
@@ -26,9 +28,13 @@ export default function TimetableGrid({ selectedDate }) {
 
   return (
     <div className="timetable">
-      <div className="panel-title with-icon">📅 Rozvrh hodin</div>
+      <div className="panel-title">
+        <img src={calendar} alt="" />
+        Rozvrh hodin
+      </div>
       <div className="panel-divider" />
 
+      {/* HEADER */}
       <div className="timetable-header">
         <div />
         {HOURS.map((h, i) => (
@@ -39,22 +45,27 @@ export default function TimetableGrid({ selectedDate }) {
         ))}
       </div>
 
+      {/* ROWS */}
       {DAYS.map((day, i) => (
-        <div className="timetable-row" key={day}>
-          <div className="day-label">
-            <strong>{day}</strong>
-            <span>
-              {format(addDays(weekStart, i), "d.M.", { locale: cs })}
-            </span>
+        <React.Fragment key={day}>
+          <div className="timetable-row">
+            <div className="day-label">
+              <strong>{day}</strong>
+              <span>
+                {format(addDays(weekStart, i), "d.M.", { locale: cs })}
+              </span>
+            </div>
+
+            {HOURS.map((_, h) => (
+              <TimetableCell
+                key={h}
+                lesson={mockLessons[`${day}-${h}`] || null}
+              />
+            ))}
           </div>
 
-          {HOURS.map((_, h) => (
-            <TimetableCell
-              key={h}
-              lesson={mockLessons[`${day}-${h}`] || null}
-            />
-          ))}
-        </div>
+          <div className="timetable-row-divider" />
+        </React.Fragment>
       ))}
     </div>
   );
