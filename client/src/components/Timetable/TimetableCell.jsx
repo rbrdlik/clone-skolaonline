@@ -4,21 +4,20 @@ import { useNavigate } from "react-router-dom";
 export default function TimetableCell({ lesson }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
-  const cellRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const onClick = (e) => {
+    const handler = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setOpen(false);
       }
     };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
   return (
-    <div className="lesson-wrapper" ref={cellRef}>
+    <div className="lesson-wrapper">
       <div
         className={`lesson-cell ${lesson ? "filled" : ""}`}
         onContextMenu={(e) => {
@@ -37,10 +36,10 @@ export default function TimetableCell({ lesson }) {
 
       {open && (
         <div className="context-menu" ref={menuRef}>
-          <button onClick={() => navigate("/hodnoceni")}>
+          <button onClick={() => navigate("/grading")}>
             Zadat hodnocení
           </button>
-          <button onClick={() => navigate("/zmena-rozvrhu")}>
+          <button onClick={() => navigate("/timetable-change")}>
             Změna v rozvrhu
           </button>
         </div>
