@@ -1,0 +1,122 @@
+@use "./variables";
+@use "./fonts";
+@use "./main-style.scss" as main;
+
+$primary-blue: #4a90e2;
+$bg-gray: #f5f7f9;
+$border-color: #e0e0e0;
+$input-bg: #ececec;
+$text-dark: #333;
+
+.grading-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7f9;
+  overflow: hidden; 
+
+  .main-content {
+    flex: 1; 
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow: hidden; 
+  }
+
+  .grading-card {
+    background: white;
+    width: 100%;
+    max-width: 1800px;
+    height: 100%; 
+    border-radius: 20px;
+    border: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column; 
+
+    .card-header {
+      padding: 0.5rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-bottom: 1px solid #eee;
+      flex-shrink: 0; 
+      font-size: 1rem;
+      font-size: 0.5rem;
+
+      img{
+        height: 40px;
+      }
+    }
+
+    .card-body {
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden; 
+    }
+
+    .settings-section {
+      flex-shrink: 0;
+      .form-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        gap: 2rem;
+        label { width: 100px; font-weight: 500; font-size: 0.9rem; }
+      }
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #eee;
+      margin: 1.5rem 0;
+      width: 20%;
+      flex-shrink: 0;
+    }
+
+    .list-container {
+      flex: 1; 
+      overflow-y: auto;
+      padding-right: 10px;
+
+      &::-webkit-scrollbar { width: 6px; }
+      &::-webkit-scrollbar-thumb { background: variables.$main-blue; border-radius: 10px; }
+
+      .student-row {
+        display: flex;
+        align-items: center;
+        padding: 8px 0;
+        
+        .student-number { width: 40px; font-weight: bold; }
+        .student-name { width: 200px; }
+      }
+    }
+
+    .card-footer {
+      padding-top: 1rem;
+      display: flex;
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+  }
+}
+
+.select-input, .text-input {
+  background-color: #ececec;
+  border: none;
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  outline: none;
+}
+
+.btn-save {
+  background-color: variables.$main-blue;
+  color: white;
+  border: none;
+  padding: 0.8rem 2.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}

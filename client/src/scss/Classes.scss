@@ -1,0 +1,109 @@
+@use "./variables";
+@use "./fonts";
+@use "./main-style.scss" as main;
+
+
+.class-list-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7f9;
+  overflow: hidden;
+
+  .main-content {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow: hidden;
+  }
+
+  .list-card {
+    background: white;
+    width: 100%;
+    max-width: 1800px;
+    height: 100%;
+    border-radius: 20px;
+    border: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+
+    .card-header {
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #eee;
+
+      img{
+        height: 40px;
+      }
+
+      h1 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+      }
+    }
+
+    .card-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 2rem;
+      overflow: hidden;
+
+      .col-id { flex: 0 0 80px; text-align: center; }
+      .col-name { flex: 0 0 150px; }
+      .col-count { flex: 1; text-align: center; }
+      .col-actions { flex: 0 0 300px; display: flex; justify-content: flex-end; gap: 10px; }
+
+      .table-header {
+        display: flex;
+        padding-bottom: 1rem;
+        font-weight: 700;
+        color: #333;
+        font-size: 0.95rem;
+      }
+
+      .table-content {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 8px;
+
+        &::-webkit-scrollbar { width: 6px; }
+        &::-webkit-scrollbar-thumb { background: variables.$main-blue; border-radius: 10px; }
+
+        .table-row {
+          display: flex;
+          align-items: center;
+          padding: 12px 0;
+          font-weight: 500;
+          color: #444;
+
+          .btn-action {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            background-color: #4a90e2;
+            box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+            transition: transform 0.1s;
+
+            &:hover { opacity: 0.9; }
+            &:active { transform: scale(0.98); }
+
+            &.secondary {
+              min-width: 80px;
+            }
+          }
+        }
+      }
+    }
+  }
+}

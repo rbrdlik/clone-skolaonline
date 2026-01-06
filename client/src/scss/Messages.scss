@@ -1,0 +1,110 @@
+@use "./variables";
+@use "./fonts";
+@use "./main-style.scss" as main;
+
+.send-message-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7f9;
+  overflow: hidden;
+
+  .main-content {
+    flex: 1;
+    padding: 30px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .message-card {
+    background: white;
+    width: 100%;
+    max-width: 1800px;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(74, 144, 226, 0.1);
+
+    .card-header {
+      padding: 0.5rem 1.5rem;
+      display: flex;
+      align-items: center;
+
+      gap: 12px;
+      border-bottom: 1px solid #eee;
+
+        img{
+            height: 40px;
+        }
+
+      h1 { font-size: 1.1rem; font-weight: 600; margin: 0; }
+    }
+
+    .card-body {
+      padding: 2rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+
+      .selection-row {
+        display: flex;
+        gap: 3rem;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column; 
+        gap: 8px;
+
+        &.full-width { width: 100%; }
+        &.grow { flex: 1; } 
+
+        label {
+          font-weight: 600;
+          font-size: 0.9rem;
+          color: #333;
+        }
+
+        &:not(.full-width) {
+          flex-direction: row;
+          align-items: center;
+          label { width: 50px; }
+        }
+      }
+
+      .select-input, .text-input, .text-area {
+        background-color: #ececec;
+        border: none;
+        border-radius: 12px;
+        padding: 0.8rem 1.2rem;
+        font-size: 0.95rem;
+        outline: none;
+      }
+
+      .text-area {
+        flex: 1;
+        resize: none; 
+      }
+    }
+
+    .card-footer {
+      padding: 1rem 2rem 2rem;
+      display: flex;
+      justify-content: flex-end;
+
+      .btn-send {
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        padding: 0.8rem 3rem;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.1s;
+
+        &:active { transform: scale(0.96); }
+      }
+    }
+  }
+}
