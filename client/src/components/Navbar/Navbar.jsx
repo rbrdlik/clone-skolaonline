@@ -1,13 +1,18 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom"; 
 import "../../scss/Navbar.scss";
 import logo from "../../assets/icons/logo-notext.png";
 import signedinuser from "../../assets/icons/signedin-user.png";
 
 export default function Navbar() {
+  const navigate = useNavigate(); 
+
+  const handleLogout = () => {
+    navigate("/signin");
+  };
+
   return (
     <>
       <header className="header">
-        {/* TOP BAR */}
         <div className="topbar">
           <div className="topbar-left">
             <img src={logo} alt="MojeŠkola" className="logo" />
@@ -24,7 +29,11 @@ export default function Navbar() {
 
             <span className="vertical-divider" />
 
-            <button className="logout-btn" aria-label="Odhlásit se">
+            <button 
+              className="logout-btn" 
+              aria-label="Odhlásit se"
+              onClick={handleLogout}
+            >
               <svg viewBox="0 0 640 640">
                 <path d="M569 337C578.4 327.6 578.4 312.4 569 303.1L425 159C418.1 152.1 407.8 150.1 398.8 153.8C389.8 157.5 384 166.3 384 176L384 256L272 256C245.5 256 224 277.5 224 304L224 336C224 362.5 245.5 384 272 384L384 384L384 464C384 473.7 389.8 482.5 398.8 486.2C407.8 489.9 418.1 487.9 425 481L569 337zM224 160C241.7 160 256 145.7 256 128C256 110.3 241.7 96 224 96L160 96C107 96 64 139 64 192L64 448C64 501 107 544 160 544L224 544C241.7 544 256 529.7 256 512C256 494.3 241.7 480 224 480L160 480C142.3 480 128 465.7 128 448L128 192C128 174.3 142.3 160 160 160L224 160z" />
               </svg>
@@ -32,15 +41,14 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* NAV */}
         <nav className="nav">
-          <NavLink to="/rozvrh" className="nav-link">
+          <NavLink to="/" className="nav-link">
             Můj rozvrh
           </NavLink>
-          <NavLink to="/tridy" className="nav-link">
+          <NavLink to="/classes" className="nav-link">
             Seznam tříd
           </NavLink>
-          <NavLink to="/zprava" className="nav-link">
+          <NavLink to="/messages" className="nav-link">
             Odeslat zprávu
           </NavLink>
         </nav>
