@@ -1,9 +1,11 @@
+import Navbar from "../../components/Navbar/Navbar";
+import TimetableLayout from "../../components/Timetable/TimetableLayout";
 
 export default function Home() {
-
   return (
     <>
-    <p>nesnasim moa fakt kys</p>
+      <Navbar />
+      <TimetableLayout />
     </>
   );
 }

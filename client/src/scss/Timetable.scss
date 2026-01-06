@@ -1,0 +1,196 @@
+@use "./variables";
+@use "./fonts";
+
+$bg-page: #f3f4f6;
+$bg-panel: #ffffff;
+$gray-soft: #f1f3f5;
+$gray-header: #8f8f8f;
+$border: #e5e7eb;
+
+.timetable-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 40px;
+  padding: 40px;
+  background: $bg-page;
+  min-height: calc(100vh - 135px);
+}
+
+.left-panel {
+  align-self: flex-start;
+}
+
+.calendar,
+.timetable {
+  background: $bg-panel;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.panel-title {
+  font-size: 18px;
+  font-weight: 600;
+
+  &.with-icon {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.panel-divider {
+  height: 1px;
+  background: $border;
+  margin: 12px 0;
+}
+
+.calendar-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+
+  select {
+    flex: 1;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid $border;
+    font-size: 13px;
+    background: #fff;
+  }
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: $gray-soft;
+  border-radius: 8px;
+  padding: 6px 0;
+  font-size: 12px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-day {
+  width: 34px;
+  height: 34px;
+  margin: auto;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  font-size: 13px;
+  cursor: pointer;
+
+  &.outside {
+    color: #bdbdbd;
+  }
+
+  &.today {
+    background: #e0e7ff;
+    font-weight: 600;
+  }
+
+  &.active {
+    background: variables.$main-blue;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  &:hover:not(.active) {
+    background: $gray-soft;
+  }
+}
+
+.timetable-header,
+.timetable-row {
+  display: grid;
+  grid-template-columns: 80px repeat(13, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.day-label {
+  background: $gray-header;
+  color: #fff;
+  border-radius: 12px;
+  padding: 10px 6px;
+  text-align: center;
+  font-size: 18px;
+
+  span {
+    display: block;
+    font-size: 10px;
+    opacity: 0.9;
+  }
+}
+
+.hour-header {
+  background: $gray-header;
+  color: #fff;
+  border-radius: 12px;
+  padding: 8px 6px;
+  text-align: center;
+
+  strong {
+    display: block;
+    font-size: 18px;
+  }
+
+  span {
+    font-size: 12px;
+    opacity: 0.9;
+  }
+}
+
+.lesson-cell {
+  background: #fff;
+  border: 1px solid $border;
+  border-radius: 14px;
+  height: 80px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+  font-size: 13px;
+  cursor: context-menu;
+
+  &.filled {
+    background: #fde8dc;
+  }
+
+  &:hover {
+    background: #eef2ff;
+    border-color: variables.$main-blue;
+  }
+}
+
+.context-menu {
+  position: absolute;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  min-width: 180px;
+
+  button {
+    width: 100%;
+    padding: 8px 14px;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover {
+      background: variables.$main-blue;
+      color: #fff;
+    }
+  }
+}
