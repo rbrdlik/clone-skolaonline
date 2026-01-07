@@ -7,6 +7,15 @@ import Header from "./components/Header";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { useState, useEffect } from "react";
+import { useAuth } from "./context/AuthContext";
+import { api } from "./services/api";
+import { useRouter } from "expo-router";
+import Header from "./components/Header";
+import { Ionicons } from "@expo/vector-icons";
+
+// Mock data - v reálné aplikaci by se načítalo z API
 const mockMessagesData = [
   {
     _id: "msg-1",
@@ -83,6 +92,31 @@ export default function Messages() {
 
   const handleMessagePress = async (messageId) => {
     await markMessageAsRead(messageId);
+  const [filter, setFilter] = useState("all"); // "all" or "unread"
+
+  useEffect(() => {
+    loadMessages();
+  }, [filter]);
+
+  const loadMessages = async () => {
+    setLoading(true);
+    try {
+      if (user?.studentId) {
+        const data = await api.getMessages(user.studentId);
+        setMessages(data.messages || []);
+      } else {
+        // Fallback na mock data
+        setMessages(mockMessagesData);
+      }
+    } catch (error) {
+      console.error("Error loading messages:", error);
+      setMessages(mockMessagesData);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMessagePress = (messageId) => {
     router.push({
       pathname: "/message-detail",
       params: { messageId }
@@ -163,6 +197,7 @@ export default function Messages() {
     }, [])
   );
 
+  // Seskupení zpráv podle měsíců
   const groupedMessages = messages.reduce((acc, msg) => {
     const month = msg.month || "Ostatní";
     if (!acc[month]) {
@@ -172,6 +207,7 @@ export default function Messages() {
     return acc;
   }, {});
 
+  // Filtrování zpráv
   const filteredMessages = filter === "unread" 
     ? messages.filter(msg => !msg.read)
     : messages;
@@ -195,6 +231,12 @@ export default function Messages() {
         style={styles.scrollView}
         {...panHandlers}
       >
+  return (
+    <View style={styles.container}>
+      <Header title="Zprávy" />
+      
+      <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
+        {/* Filter buttons */}
         <View style={styles.filterContainer}>
           <TouchableOpacity
             style={[styles.filterButton, filter === "all" && styles.filterButtonActive]}
@@ -206,6 +248,7 @@ export default function Messages() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.filterButton, styles.filterButtonSecond, filter === "unread" && styles.filterButtonActive]}
+            style={[styles.filterButton, filter === "unread" && styles.filterButtonActive]}
             onPress={() => setFilter("unread")}
           >
             <Text style={[styles.filterText, filter === "unread" && styles.filterTextActive]}>
@@ -213,6 +256,8 @@ export default function Messages() {
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* Messages grouped by month */}
         <View style={styles.messagesContainer}>
           {Object.keys(filteredGrouped).map((month) => (
             <View key={month} style={styles.monthSection}>
@@ -265,6 +310,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 20,
     paddingVertical: 15,
+    gap: 10,
   },
   filterButton: {
     paddingHorizontal: 20,
@@ -308,6 +354,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     padding: 15,
     alignItems: "flex-start",
+    // iOS shadow
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -315,6 +362,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.05,
     shadowRadius: 2,
+    // Android shadow
     elevation: 2,
   },
   profileIcon: {

@@ -9,6 +9,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Načtení uloženého tokenu a uživatele při startu
   useEffect(() => {
     loadStoredAuth();
   }, []);
@@ -23,11 +24,14 @@ export function AuthProvider({ children }) {
         setUser(storedUser);
         setIsAuthenticated(true);
         
+        // Ověření tokenu s backendem
         try {
           const currentUser = await api.getCurrentUser();
           setUser(currentUser);
           await storeUser(currentUser);
         } catch (error) {
+          // Token je neplatný
+          // V dev módu použijeme mock uživatele místo odhlášení
           if (__DEV__) {
             console.log('Backend není dostupný, používáme mock uživatele');
             const mockUser = {
@@ -45,6 +49,7 @@ export function AuthProvider({ children }) {
           }
         }
       } else if (__DEV__) {
+        // V dev módu automaticky přihlásit mock uživatele pokud není uložený token
         console.log('Dev mode: Automatické mock přihlášení');
         const mockUser = {
           id: 'dev-user-1',
@@ -59,6 +64,7 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error('Error loading stored auth:', error);
+      // V dev módu použijeme mock uživatele i při chybě
       if (__DEV__) {
         const mockUser = {
           id: 'dev-user-1',
@@ -77,6 +83,7 @@ export function AuthProvider({ children }) {
   }
 
   async function login(username, password) {
+    // Development mode: mock přihlášení pokud backend není dostupný
     if (__DEV__ && (username === 'dev' || username === 'test')) {
       const mockUser = {
         id: 'dev-user-1',
@@ -105,6 +112,7 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error('Login error:', error);
       
+      // Development mode: fallback na mock přihlášení pokud backend není dostupný
       if (__DEV__) {
         console.log('Backend není dostupný, používáme mock přihlášení');
         const mockUser = {
@@ -137,6 +145,11 @@ export function AuthProvider({ children }) {
       setToken(null);
       setUser(null);
       setIsAuthenticated(false);
+      setToken(null);
+      setUser(null);
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error('Logout error:', error);
     }
   }
 

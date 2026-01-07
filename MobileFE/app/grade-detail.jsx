@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import Header from "./components/Header";
 
+// Mock data - v reálné aplikaci by se načítalo z API
 const mockGradeData = {
   _id: "grade-1",
   subject: "Český jazyk a literatura",
@@ -16,6 +17,7 @@ const mockGradeData = {
 export default function GradeDetail() {
   const { gradeId, subjectName } = useLocalSearchParams();
   
+  // V reálné aplikaci by se načítalo z API podle gradeId
   const grade = mockGradeData;
   const displaySubject = subjectName || grade.subject;
 
@@ -24,6 +26,7 @@ export default function GradeDetail() {
       <Header title={displaySubject} showBack />
       
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
+        {/* Grade header */}
         <View style={styles.gradeHeader}>
           <View style={styles.gradeValueBox}>
             <Text style={styles.gradeValue}>{grade.value}</Text>
@@ -31,12 +34,14 @@ export default function GradeDetail() {
           <Text style={styles.gradeName}>{grade.name}</Text>
         </View>
 
+        {/* Grade details */}
         <View style={styles.section}>
           <DetailRow label="Datum hodnocení" value={grade.date} />
           <DetailRow label="Druh hodnocení" value={grade.type} />
           <DetailRow label="Váha" value={grade.weight.toString()} />
         </View>
 
+        {/* Verbal evaluation */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Slovní hodnocení</Text>
           <View style={styles.verbalEvaluationBox}>

@@ -1,0 +1,12 @@
+@use "./variables";
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  scroll-behavior: smooth;
+}
+
+::selection{
+  background-color: variables.$main-blue;
+}

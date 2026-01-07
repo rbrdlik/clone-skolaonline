@@ -1,3 +1,6 @@
+// Mock data pro známky - struktura odpovídá backend API
+
+// Funkce pro převod známky na číslo (pro výpočet průměru)
 const gradeToNumber = (grade) => {
   if (typeof grade === 'number') return grade;
   const gradeStr = String(grade).trim();
@@ -5,11 +8,17 @@ const gradeToNumber = (grade) => {
   const hasPlus = gradeStr.includes('+');
   const hasMinus = gradeStr.includes('-');
   
+  // Nejdřív zkontrolujeme znaménka, pak odstraníme
+  const hasPlus = gradeStr.includes('+');
+  const hasMinus = gradeStr.includes('-');
+  
+  // Odstranění znamének pro získání čísla
   const cleanGrade = gradeStr.replace(/[+-]/g, '');
   const num = parseFloat(cleanGrade);
   
   if (isNaN(num)) return null;
   
+  // Úprava podle znamének
   if (hasPlus) {
     return num + 0.25;
   } else if (hasMinus) {
@@ -19,6 +28,7 @@ const gradeToNumber = (grade) => {
   return num;
 };
 
+// Funkce pro výpočet průměru z pole známek
 export const calculateAverage = (grades) => {
   if (!grades || grades.length === 0) return 0;
   
@@ -32,6 +42,7 @@ export const calculateAverage = (grades) => {
   return sum / numbers.length;
 };
 
+// Mock data pro předměty s reálnými známkami
 export const mockSubjectsWithGrades = {
   "cj-1": {
     subject: "Český jazyk a literatura",
@@ -77,6 +88,9 @@ export const mockSubjectsWithGrades = {
   },
 };
 
+};
+
+// Funkce pro získání předmětů s vypočítanými průměry
 export const getSubjectsWithAverages = () => {
   return Object.values(mockSubjectsWithGrades).map(subjectData => {
     const average = calculateAverage(subjectData.grades);
@@ -89,3 +103,4 @@ export const getSubjectsWithAverages = () => {
     };
   });
 };
+

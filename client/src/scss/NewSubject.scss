@@ -1,0 +1,117 @@
+@use "./variables";
+@use "./fonts";
+@use "./main-style.scss" as main;
+
+.create-subject-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7f9;
+
+  .main-content {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .form-card {
+    background: white;
+    width: 100%;
+    max-width: 1800px;
+    border-radius: 20px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+
+    .card-header {
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #eee;
+      h1 { font-size: 1rem; font-weight: 600; margin: 0; }
+    }
+
+    .card-body {
+      padding: 2.5rem 2rem;
+
+      .subject-flex-container {
+        display: flex;
+        gap: 80px;
+      }
+
+      .left-column {
+        flex: 0 0 350px; 
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      .right-column {
+        flex: 1; 
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        label { font-weight: 600; font-size: 0.85rem; }
+        .text-input, .select-input {
+          background-color: #ececec;
+          border: none;
+          border-radius: 12px;
+          padding: 0.8rem 1rem;
+          outline: none;
+        }
+      }
+
+      .assigned-list {
+        margin-top: 10px;
+        border-top: 1px solid #eee;
+        padding-top: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 300px;
+        overflow-y: auto;
+
+        .teacher-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-weight: 600;
+          font-size: 0.9rem;
+
+          .btn-remove {
+            background: none;
+            border: none;
+            color: #ff4d4d;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.85rem;
+            &:hover { color: #cc0000; }
+          }
+        }
+      }
+
+      .card-footer {
+        margin-top: 3rem;
+        display: flex;
+        justify-content: flex-end;
+        .btn-create {
+          background-color: #4a90e2;
+          color: white;
+          border: none;
+          padding: 0.8rem 3.5rem;
+          border-radius: 12px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+}

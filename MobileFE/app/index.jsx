@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Alert, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import { useState, useEffect } from "react";
 import { useAuth } from "./context/AuthContext";
 import { useRouter, useSegments } from "expo-router";
@@ -12,6 +13,7 @@ export default function Login() {
   const router = useRouter();
   const segments = useSegments();
 
+  // Pokud je uživatel přihlášen, přesměruj na rozvrh
   useEffect(() => {
     if (isAuthenticated) {
       router.replace("/rozvrh");
@@ -29,6 +31,7 @@ export default function Login() {
       const result = await login(username.trim(), password);
       
       if (result.success) {
+        // Přesměrování na hlavní stránku (rozvrh)
         router.replace("/rozvrh");
       } else {
         Alert.alert(
@@ -49,6 +52,20 @@ export default function Login() {
 
   const handleSkipLogin = () => {
     login('dev', 'dev').then(() => {
+  // Development mode - tlačítko pro přeskočení přihlášení
+  const handleSkipLogin = () => {
+    // Mock přihlášení pro development
+    const mockUser = {
+      id: 'dev-user-1',
+      username: 'teststudent',
+      studentId: 'student-1',
+      name: 'Test Student',
+      class: '1A1',
+    };
+    
+    // Simulace úspěšného přihlášení
+    login('dev', 'dev').then(() => {
+      // Pokud login selže (backend není dostupný), použijeme mock data
       setTimeout(() => {
         router.replace("/rozvrh");
       }, 100);
@@ -99,6 +116,44 @@ export default function Login() {
                 editable={!loading}
               />
             </View>
+        {/* Logo/Title */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Škola Online</Text>
+          <Text style={styles.subtitle}>Přihlaste se do svého účtu</Text>
+          {__DEV__ && (
+            <Text style={styles.devNote}>
+              Development Mode: Můžete přeskočit přihlášení
+            </Text>
+          )}
+        </View>
+
+        {/* Login Form */}
+        <View style={styles.form}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Uživatelské jméno</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Zadejte uživatelské jméno"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!loading}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Heslo</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Zadejte heslo"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!loading}
+            />
           </View>
 
           <TouchableOpacity
@@ -113,6 +168,7 @@ export default function Login() {
             )}
           </TouchableOpacity>
 
+          {/* Development mode - tlačítko pro přeskočení */}
           {__DEV__ && (
             <TouchableOpacity
               style={styles.skipButton}
@@ -134,6 +190,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
+    backgroundColor: "#ffffff",
   },
   content: {
     flex: 1,
@@ -157,6 +214,29 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "700",
     color: "#4C8DEF",
+    paddingHorizontal: 30,
+  },
+  header: {
+    alignItems: "center",
+    marginBottom: 50,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#4C8DEF",
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+  },
+  devNote: {
+    fontSize: 12,
+    color: "#999",
+    textAlign: "center",
+    marginTop: 8,
+    fontStyle: "italic",
   },
   form: {
     width: "100%",
@@ -182,6 +262,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
     padding: 0,
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
+  input: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    fontSize: 16,
+    backgroundColor: "#F9F9F9",
   },
   loginButton: {
     height: 50,
@@ -190,6 +284,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 20,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 10,
+    // iOS shadow
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -197,6 +296,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    // Android shadow
     elevation: 3,
   },
   loginButtonDisabled: {

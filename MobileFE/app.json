@@ -36,6 +36,7 @@
           "sounds": []
         }
       ]
+      "expo-router"
     ]
   }
 }

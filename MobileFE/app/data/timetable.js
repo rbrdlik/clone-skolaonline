@@ -1,3 +1,7 @@
+// Mock data pro rozvrh - struktura odpovídá backend API
+// Přidáno více hodin na různé dny pro testování
+
+// Funkce pro generování hodin pro konkrétní datum
 const generateLessonsForDate = (dateStr, dayOfWeek) => {
   const baseLessons = [
     {
@@ -79,6 +83,7 @@ const generateLessonsForDate = (dateStr, dayOfWeek) => {
     },
   ];
 
+  // Pro pondělí a středu přidáme více hodin
   if (dayOfWeek === 1 || dayOfWeek === 3) {
     baseLessons.push({
       _id: `lesson-${dateStr}-extra`,
@@ -99,12 +104,17 @@ const generateLessonsForDate = (dateStr, dayOfWeek) => {
 const now = new Date();
 const currentWeekStart = new Date(now);
 currentWeekStart.setDate(now.getDate() - now.getDay() + 1);
+// Generování dat pro aktuální týden
+const now = new Date();
+const currentWeekStart = new Date(now);
+currentWeekStart.setDate(now.getDate() - now.getDay() + 1); // Pondělí
 
 const allLessons = [];
 for (let i = 0; i < 5; i++) {
   const date = new Date(currentWeekStart);
   date.setDate(currentWeekStart.getDate() + i);
   const dateStr = date.toISOString().split('T')[0];
+  const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
   const dayLessons = generateLessonsForDate(dateStr, date.getDay());
   allLessons.push(...dayLessons);
 }
@@ -118,6 +128,7 @@ export const timetableData = {
     { _id: "5", label: "Pá", date: 23 }
   ],
   lessons: allLessons,
+  // Funkce pro získání hodin pro konkrétní datum
   getLessonsForDate: (dateStr) => {
     return allLessons.filter(lesson => lesson.date === dateStr);
   }

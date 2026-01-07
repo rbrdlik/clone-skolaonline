@@ -93,6 +93,31 @@ export default function Header({ title, showBack = false, showProfile = false })
         </TouchableWithoutFeedback>
       </Modal>
     </>
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+
+export default function Header({ title, showBack = false }) {
+  const router = useRouter();
+
+  return (
+    <View style={styles.header}>
+      {showBack ? (
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#000" />
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.placeholder} />
+      )}
+      
+      <Text style={styles.title}>{title}</Text>
+      
+      <TouchableOpacity style={styles.profileButton}>
+        <View style={styles.profileIcon}>
+          <Ionicons name="person" size={16} color="#fff" />
+        </View>
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -114,6 +139,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 2,
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "flex-start",
+  },
+  placeholder: {
+    width: 40,
   },
   title: {
     fontSize: 22,
@@ -123,6 +160,7 @@ const styles = StyleSheet.create({
     textAlign: "left",
     marginLeft: 0,
     paddingLeft: 0,
+    textAlign: "center",
   },
   profileButton: {
     width: 40,

@@ -3,6 +3,7 @@ import { useLocalSearchParams } from "expo-router";
 import Header from "./components/Header";
 import { Ionicons } from "@expo/vector-icons";
 
+// Mock data - v reálné aplikaci by se načítalo z API
 const mockMessageData = {
   _id: "msg-1",
   sender: "Ing. Václav Bohata",
@@ -16,6 +17,7 @@ Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
 export default function MessageDetail() {
   const { messageId } = useLocalSearchParams();
   
+  // V reálné aplikaci by se načítalo z API podle messageId
   const message = mockMessageData;
 
   return (
@@ -23,11 +25,13 @@ export default function MessageDetail() {
       <Header title={message.sender} showBack />
       
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
+        {/* Message header */}
         <View style={styles.messageHeader}>
           <Text style={styles.messageSubject}>{message.subject}</Text>
           <Text style={styles.messageDate}>{message.date}</Text>
         </View>
 
+        {/* Message content */}
         <View style={styles.messageContent}>
           <Text style={styles.messageText}>{message.content}</Text>
         </View>

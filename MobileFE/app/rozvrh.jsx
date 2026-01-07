@@ -1,5 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, PanResponder, Image } from "react-native";
 import { useState, useEffect, useRef } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { useState, useEffect } from "react";
 import { useAuth } from "./context/AuthContext";
 import { api } from "./services/api";
 import { timetableData } from "./data/timetable";
@@ -22,6 +24,17 @@ export default function Rozvrh() {
     loadTimetable();
   }, [currentWeek]);
 
+  // selectedDate se inicializuje po načtení dní
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:19',message:'useEffect triggered',data:{currentWeek:currentWeek.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    loadTimetable();
+  }, [currentWeek]);
+
+  // Funkce pro generování hodin pro konkrétní datum (přesunuto z timetable.js)
   const generateLessonsForDate = (dateStr, dayOfWeek) => {
     const baseLessons = [
       {
@@ -145,6 +158,10 @@ export default function Rozvrh() {
       },
     ];
 
+      },
+    ];
+
+    // Pro pondělí a středu přidáme více hodin
     if (dayOfWeek === 1 || dayOfWeek === 3) {
       baseLessons.push({
         _id: `lesson-${dateStr}-extra`,
@@ -178,6 +195,9 @@ export default function Rozvrh() {
         setDays(data.days || []);
       } else {
         const weekDays = generateWeekDays(currentWeek);
+        // Fallback na mock data - generujeme dny pro aktuální týden
+        const weekDays = generateWeekDays(currentWeek);
+        // Dynamicky generujeme hodiny pro každý den v týdnu
         const weekLessons = [];
         weekDays.forEach(day => {
           if (day.fullDate) {
@@ -188,6 +208,12 @@ export default function Rozvrh() {
         });
         setDays(weekDays);
         setLessons(weekLessons);
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:35',message:'Mock lessons loaded',data:{lessonsCount:weekLessons.length,daysCount:weekDays.length,weekStart:weekDays[0]?.fullDate?.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
+        setDays(weekDays);
+        setLessons(weekLessons);
+        // Nastavit selectedDate na první den nebo dnešní den
         if (!selectedDate) {
           const todayDay = weekDays.find(d => d.today);
           setSelectedDate(todayDay?.fullDate || weekDays[0]?.fullDate || new Date());
@@ -206,6 +232,7 @@ export default function Rozvrh() {
       });
       setDays(weekDays);
       setLessons(weekLessons);
+      // Nastavit selectedDate na první den nebo dnešní den
       if (!selectedDate) {
         const todayDay = weekDays.find(d => d.today);
         setSelectedDate(todayDay?.fullDate || weekDays[0]?.fullDate || new Date());
@@ -219,6 +246,17 @@ export default function Rozvrh() {
     const days = [];
     const startOfWeek = new Date(weekStart);
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
+  // Generování dní pro týden
+  const generateWeekDays = (weekStart) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:48',message:'generateWeekDays called',data:{weekStart:weekStart.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
+    const days = [];
+    const startOfWeek = new Date(weekStart);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1); // Začátek v pondělí
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:51',message:'startOfWeek calculated',data:{startOfWeek:startOfWeek.toISOString(),dayOfWeek:startOfWeek.getDay()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     
     const dayLabels = ["Po", "Út", "St", "Čt", "Pá"];
     const today = new Date();
@@ -241,6 +279,13 @@ export default function Rozvrh() {
     return days;
   };
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:71',message:'generateWeekDays result',data:{daysCount:days.length,firstDay:days[0]?.fullDate?.toISOString(),lastDay:days[4]?.fullDate?.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
+    return days;
+  };
+
+  // Formátování data pro API (YYYY-MM-DD)
   const formatWeekDate = (date) => {
     const d = new Date(date);
     const year = d.getFullYear();
@@ -317,12 +362,54 @@ export default function Rozvrh() {
   const getLessonsForDay = (day) => {
     if (!day || !day.fullDate) return lessons;
     const dayStr = day.fullDate.toISOString().split('T')[0];
+  // Změna týdne
+  const changeWeek = (direction) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:84',message:'changeWeek called',data:{direction,currentWeekBefore:currentWeek.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    const newWeek = new Date(currentWeek);
+    newWeek.setDate(newWeek.getDate() + (direction * 7));
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:87',message:'newWeek calculated',data:{newWeek:newWeek.toISOString(),direction},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    setCurrentWeek(newWeek);
+    // Reset selectedDate na první den nového týdne
+    const newWeekStart = new Date(newWeek);
+    newWeekStart.setDate(newWeekStart.getDate() - newWeekStart.getDay() + 1); // Pondělí
+    setSelectedDate(newWeekStart);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:92',message:'Week changed and date reset',data:{newWeek:newWeek.toISOString(),selectedDate:newWeekStart.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+  };
+
+  // Získání aktuálního měsíce a roku
+  const monthNames = [
+    "Leden", "Únor", "Březen", "Duben", "Květen", "Červen",
+    "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"
+  ];
+  const currentMonth = monthNames[currentWeek.getMonth()];
+  const currentYear = currentWeek.getFullYear();
+
+  // Filtrování hodin pro vybraný den
+  const getLessonsForDay = (day) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:99',message:'getLessonsForDay called',data:{day:day?.fullDate?.toISOString(),lessonsCount:lessons.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+    // #endregion
+    if (!day || !day.fullDate) return lessons;
+    const dayStr = day.fullDate.toISOString().split('T')[0]; // YYYY-MM-DD
+    // Filtrujeme hodiny podle data
     const filtered = lessons.filter(lesson => {
       if (lesson.date) {
         return lesson.date === dayStr;
       }
       return true;
     });
+      // Pokud není datum, zobrazíme všechny (pro mock data)
+      return true;
+    });
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:110',message:'getLessonsForDay result',data:{dayStr,filteredCount:filtered.length,allLessonsCount:lessons.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+    // #endregion
     return filtered;
   };
 
