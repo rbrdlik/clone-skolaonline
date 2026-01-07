@@ -60,28 +60,51 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-exports.getStudents = async (req, res) => {
+exports.getAllStudents = async (req, res) => {
   try {
-    const data = await User.find({ role: "student" }).select(
-      "-password -refreshToken"
-    );
-    if (data.length)
-      return res.status(200).send({ message: "Students found", payload: data });
-    res.status(404).send({ message: "Students not found" });
-  } catch (e) {
-    res.status(500).send(e);
+    const students = await User.find({ role: "student" }).select("-password -refreshToken");
+    res.status(200).json(students);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
-exports.getTeachers = async (req, res) => {
+exports.getStudentsByClass = async (req, res) => {
   try {
-    const data = await User.find({ role: "učitel" }).select(
-      "-password -refreshToken"
-    );
-    if (data.length)
-      return res.status(200).send({ message: "Teachers found", payload: data });
-    res.status(404).send({ message: "Teachers not found" });
-  } catch (e) {
-    res.status(500).send(e);
+    const classData = await Class.findById(req.params.classId)
+      .populate("students", "first_name last_name email");
+
+    if (!classData) {
+      return res.status(404).json({ message: "Třída nenalezena" });
+    }
+
+    res.status(200).json(classData.students);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getStudentsWithoutClass = async (req, res) => {
+  try {
+    const classes = await Class.find({}, "students");
+    const assignedStudentIds = classes.flatMap(c => c.students);
+
+    const students = await User.find({
+      role: "student",
+      _id: { $nin: assignedStudentIds }
+    }).select("-password -refreshToken");
+
+    res.status(200).json(students);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getAllTeachers = async (req, res) => {
+  try {
+    const teachers = await User.find({ role: "učitel" }).select("-password -refreshToken");
+    res.status(200).json(teachers);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
