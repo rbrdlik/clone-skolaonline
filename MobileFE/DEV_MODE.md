@@ -42,3 +42,4 @@ Mock přihlášení se použije pouze pokud:
 
 Tato funkce je dostupná pouze v development módu. V production buildu se mock přihlášení nepoužije.
 
+

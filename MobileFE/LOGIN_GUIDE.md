@@ -91,3 +91,4 @@ Pro ověření, že aplikace může komunikovat s backendem:
 - Backend logy pro chyby
 - Konzoli mobilní aplikace
 - Network requests v DevTools
+

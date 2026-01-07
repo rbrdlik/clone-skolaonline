@@ -31,8 +31,9 @@ export default function BottomNav() {
   };
 
   useEffect(() => {
+    const index = getIndexFromPath();
     Animated.spring(translateX, {
-      toValue: getIndexFromPath() * itemWidth,
+      toValue: index * itemWidth,
       useNativeDriver: true,
       speed: 20,
       bounciness: 8,
@@ -46,21 +47,22 @@ export default function BottomNav() {
           style={[
             styles.indicator,
             {
-              width: itemWidth,
+              width: itemWidth * 0.85,
+              marginLeft: itemWidth * 0.075,
               transform: [{ translateX }],
             },
           ]}
         />
 
-        <NavItem href="/messages" iconName="chatbubble" />
-        <NavItem href="/rozvrh" iconName="calendar" />
-        <NavItem href="/znamky" iconName="star" />
+        <NavItem href="/messages" iconName="chatbubble" index={0} />
+        <NavItem href="/rozvrh" iconName="calendar" index={1} />
+        <NavItem href="/znamky" iconName="star" index={2} />
       </View>
     </View>
   );
 }
 
-function NavItem({ href, iconName }) {
+function NavItem({ href, iconName, index }) {
   const pathname = usePathname();
   const segments = useSegments();
   
@@ -74,11 +76,13 @@ function NavItem({ href, iconName }) {
         style={styles.navItem}
         activeOpacity={0.7}
       >
-        <Ionicons 
-          name={iconName} 
-          size={24} 
-          color={isActive ? "#7d8aff" : "black"} 
-        />
+        <View style={styles.iconContainer}>
+          <Ionicons 
+            name={iconName} 
+            size={24} 
+            color={isActive ? "#ffffff" : "#000000"} 
+          />
+        </View>
       </TouchableOpacity>
     </Link>
   );
@@ -88,8 +92,11 @@ const styles = StyleSheet.create({
   navWrapper: {
     position: "absolute",
     bottom: 20,
+    left: 0,
+    right: 0,
     width: "100%",
     alignItems: "center",
+    justifyContent: "center",
     zIndex: 100,
     elevation: 100,
   },
@@ -100,8 +107,9 @@ const styles = StyleSheet.create({
     borderRadius: 35,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     overflow: "hidden",
-    // iOS shadow
+    position: "relative",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -109,14 +117,14 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.15,
     shadowRadius: 10,
-    // Android shadow
     elevation: 8,
   },
 
   indicator: {
     position: "absolute",
+    left: 0,
+    top: 10,
     height: 50,
-    margin: 10,
     borderRadius: 25,
     backgroundColor: "#7d8aff",
     zIndex: 0,
@@ -127,7 +135,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 1,
+    height: "100%",
+    zIndex: 10,
+  },
+
+  iconContainer: {
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   icon: {

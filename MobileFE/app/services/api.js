@@ -1,11 +1,8 @@
-// Ukládání a načítání tokenu z AsyncStorage
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '../config/api';
 
-// API Base URL
 const API_BASE_URL = API_CONFIG.BASE_URL;
 
-// Helper funkce pro API volání
 async function apiCall(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
   
@@ -17,7 +14,6 @@ async function apiCall(endpoint, options = {}) {
     ...options,
   };
 
-  // Přidání tokenu pokud existuje
   const token = await getStoredToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -85,9 +81,7 @@ export async function storeUser(user) {
   }
 }
 
-// API funkce
 export const api = {
-  // Autentizace
   async login(username, password) {
     const data = await apiCall('/auth/login', {
       method: 'POST',
@@ -113,28 +107,29 @@ export const api = {
     return await apiCall('/auth/me');
   },
 
-  // Rozvrh
   async getTimetable(studentId, week = null) {
     const params = week ? `?week=${week}` : '';
     return await apiCall(`/timetable/${studentId}${params}`);
   },
 
-  // Známky
   async getGrades(studentId, semester = null) {
     const params = semester ? `?semester=${semester}` : '';
     return await apiCall(`/grades/${studentId}${params}`);
   },
 
-  // Zprávy
   async getMessages(studentId) {
     return await apiCall(`/messages/${studentId}`);
   },
 
-  // Třída
+  async markMessageAsRead(studentId, messageId) {
+    return await apiCall(`/messages/${studentId}/${messageId}/read`, {
+      method: 'POST',
+    });
+  },
+
   async getClassInfo(classId) {
     return await apiCall(`/class/${classId}`);
   },
 };
 
 export default api;
-

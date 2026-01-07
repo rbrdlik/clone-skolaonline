@@ -2,51 +2,25 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-nati
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Header from "./components/Header";
 import { Ionicons } from "@expo/vector-icons";
-
-// Mock data - v reálné aplikaci by se načítalo z API
-const mockLessonData = {
-  _id: "a1",
-  subject: "Český jazyk a literatura",
-  teacher: "Věra Svárovská",
-  class: "4.AI",
-  group: "4.AI (ANI2)",
-  classroom: "060",
-  date: "Po 15.12.",
-  lessonNumber: 6,
-  time: "7:55 - 8:40",
-  grade: {
-    name: "Maturitní opakování",
-    value: "1-",
-    weight: 0.0,
-  },
-  homework: {
-    task: "Přepsat zápis",
-    dueDate: "12.12.2025 16:00",
-  },
-  lessonInfo: "-",
-  coveredMaterial: "-",
-};
+import { getLessonDetail } from "./data/lessons";
 
 export default function LessonDetail() {
   const { lessonId } = useLocalSearchParams();
   const router = useRouter();
   
-  // V reálné aplikaci by se načítalo z API podle lessonId
-  const lesson = mockLessonData;
+  const lesson = getLessonDetail(lessonId || "default");
 
   return (
     <View style={styles.container}>
       <Header title={lesson.subject} showBack />
       
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
-        {/* Date and lesson number */}
         <View style={styles.dateSection}>
           <Text style={styles.dateText}>
             {lesson.date} ({lesson.lessonNumber})
           </Text>
         </View>
 
-        {/* Informace */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Informace</Text>
           
@@ -56,7 +30,6 @@ export default function LessonDetail() {
           <InfoRow label="Učebna" value={lesson.classroom} />
         </View>
 
-        {/* Hodnocení */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Hodnocení</Text>
           
@@ -71,7 +44,6 @@ export default function LessonDetail() {
           </View>
         </View>
 
-        {/* Domácí úkoly */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Domácí úkoly</Text>
           
@@ -83,13 +55,11 @@ export default function LessonDetail() {
           </View>
         </View>
 
-        {/* Informace k výuce */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Informace k výuce</Text>
           <Text style={styles.emptyText}>{lesson.lessonInfo}</Text>
         </View>
 
-        {/* Probrané učivo */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Probrané učivo</Text>
           <Text style={styles.emptyText}>{lesson.coveredMaterial}</Text>

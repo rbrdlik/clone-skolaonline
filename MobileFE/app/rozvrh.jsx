@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, PanResponder, Image } from "react-native";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "./context/AuthContext";
 import { api } from "./services/api";
 import { timetableData } from "./data/timetable";
@@ -14,17 +14,14 @@ export default function Rozvrh() {
   const [days, setDays] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentWeek, setCurrentWeek] = useState(new Date());
-  // selectedDate se inicializuje po načtení dní
   const [selectedDate, setSelectedDate] = useState(null);
+  const swipeStartX = useRef(0);
+  const swipeStartY = useRef(0);
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:19',message:'useEffect triggered',data:{currentWeek:currentWeek.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     loadTimetable();
   }, [currentWeek]);
 
-  // Funkce pro generování hodin pro konkrétní datum (přesunuto z timetable.js)
   const generateLessonsForDate = (dateStr, dayOfWeek) => {
     const baseLessons = [
       {
@@ -37,6 +34,12 @@ export default function Rozvrh() {
         time: "7:55 - 8:40",
         color: "#EEF3FF",
         date: dateStr,
+        hasGrade: true,
+        hasNote: false,
+        isCancelled: false,
+        isConsultation: false,
+        isDifferentClass: false,
+        isEvent: false,
       },
       {
         _id: `lesson-${dateStr}-2`,
@@ -48,6 +51,12 @@ export default function Rozvrh() {
         time: "8:45 - 10:15",
         color: "#FFEEDD",
         date: dateStr,
+        hasGrade: true,
+        hasNote: true,
+        isCancelled: false,
+        isConsultation: false,
+        isDifferentClass: false,
+        isEvent: false,
       },
       {
         _id: `lesson-${dateStr}-4`,
@@ -59,6 +68,12 @@ export default function Rozvrh() {
         time: "10:30 - 11:15",
         color: "#EEF3FF",
         date: dateStr,
+        hasGrade: false,
+        hasNote: true,
+        isCancelled: false,
+        isConsultation: false,
+        isDifferentClass: false,
+        isEvent: false,
       },
       {
         _id: `lesson-${dateStr}-5`,
@@ -70,6 +85,12 @@ export default function Rozvrh() {
         time: "11:25 - 12:10",
         color: "#EEF3FF",
         date: dateStr,
+        hasGrade: false,
+        hasNote: false,
+        isCancelled: true,
+        isConsultation: false,
+        isDifferentClass: false,
+        isEvent: false,
       },
       {
         _id: `lesson-${dateStr}-6`,
@@ -81,6 +102,12 @@ export default function Rozvrh() {
         time: "12:20 - 13:05",
         color: "#EEF3FF",
         date: dateStr,
+        hasGrade: false,
+        hasNote: false,
+        isCancelled: false,
+        isConsultation: true,
+        isDifferentClass: false,
+        isEvent: false,
       },
       {
         _id: `lesson-${dateStr}-8`,
@@ -92,6 +119,12 @@ export default function Rozvrh() {
         time: "14:00 - 14:45",
         color: "#EEF3FF",
         date: dateStr,
+        hasGrade: false,
+        hasNote: false,
+        isCancelled: false,
+        isConsultation: false,
+        isDifferentClass: true,
+        isEvent: false,
       },
       {
         _id: `lesson-${dateStr}-9`,
@@ -103,10 +136,15 @@ export default function Rozvrh() {
         time: "14:55 - 15:40",
         color: "#EEF3FF",
         date: dateStr,
+        hasGrade: false,
+        hasNote: false,
+        isCancelled: false,
+        isConsultation: false,
+        isDifferentClass: false,
+        isEvent: true,
       },
     ];
 
-    // Pro pondělí a středu přidáme více hodin
     if (dayOfWeek === 1 || dayOfWeek === 3) {
       baseLessons.push({
         _id: `lesson-${dateStr}-extra`,
@@ -118,6 +156,12 @@ export default function Rozvrh() {
         time: "13:15 - 14:00",
         color: "#E8F5E9",
         date: dateStr,
+        hasGrade: false,
+        hasNote: false,
+        isCancelled: false,
+        isConsultation: false,
+        isDifferentClass: false,
+        isEvent: false,
       });
     }
 
@@ -133,9 +177,7 @@ export default function Rozvrh() {
         setLessons(data.lessons || []);
         setDays(data.days || []);
       } else {
-        // Fallback na mock data - generujeme dny pro aktuální týden
         const weekDays = generateWeekDays(currentWeek);
-        // Dynamicky generujeme hodiny pro každý den v týdnu
         const weekLessons = [];
         weekDays.forEach(day => {
           if (day.fullDate) {
@@ -144,12 +186,8 @@ export default function Rozvrh() {
             weekLessons.push(...dayLessons);
           }
         });
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:35',message:'Mock lessons loaded',data:{lessonsCount:weekLessons.length,daysCount:weekDays.length,weekStart:weekDays[0]?.fullDate?.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
         setDays(weekDays);
         setLessons(weekLessons);
-        // Nastavit selectedDate na první den nebo dnešní den
         if (!selectedDate) {
           const todayDay = weekDays.find(d => d.today);
           setSelectedDate(todayDay?.fullDate || weekDays[0]?.fullDate || new Date());
@@ -168,7 +206,6 @@ export default function Rozvrh() {
       });
       setDays(weekDays);
       setLessons(weekLessons);
-      // Nastavit selectedDate na první den nebo dnešní den
       if (!selectedDate) {
         const todayDay = weekDays.find(d => d.today);
         setSelectedDate(todayDay?.fullDate || weekDays[0]?.fullDate || new Date());
@@ -178,17 +215,10 @@ export default function Rozvrh() {
     }
   };
 
-  // Generování dní pro týden
   const generateWeekDays = (weekStart) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:48',message:'generateWeekDays called',data:{weekStart:weekStart.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     const days = [];
     const startOfWeek = new Date(weekStart);
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1); // Začátek v pondělí
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:51',message:'startOfWeek calculated',data:{startOfWeek:startOfWeek.toISOString(),dayOfWeek:startOfWeek.getDay()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
     
     const dayLabels = ["Po", "Út", "St", "Čt", "Pá"];
     const today = new Date();
@@ -208,13 +238,9 @@ export default function Rozvrh() {
         today: dateStr === todayStr,
       });
     }
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:71',message:'generateWeekDays result',data:{daysCount:days.length,firstDay:days[0]?.fullDate?.toISOString(),lastDay:days[4]?.fullDate?.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     return days;
   };
 
-  // Formátování data pro API (YYYY-MM-DD)
   const formatWeekDate = (date) => {
     const d = new Date(date);
     const year = d.getFullYear();
@@ -223,52 +249,80 @@ export default function Rozvrh() {
     return `${year}-${month}-${day}`;
   };
 
-  // Změna týdne
   const changeWeek = (direction) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:84',message:'changeWeek called',data:{direction,currentWeekBefore:currentWeek.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     const newWeek = new Date(currentWeek);
     newWeek.setDate(newWeek.getDate() + (direction * 7));
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:87',message:'newWeek calculated',data:{newWeek:newWeek.toISOString(),direction},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     setCurrentWeek(newWeek);
-    // Reset selectedDate na první den nového týdne
     const newWeekStart = new Date(newWeek);
-    newWeekStart.setDate(newWeekStart.getDate() - newWeekStart.getDay() + 1); // Pondělí
+    newWeekStart.setDate(newWeekStart.getDate() - newWeekStart.getDay() + 1);
     setSelectedDate(newWeekStart);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:92',message:'Week changed and date reset',data:{newWeek:newWeek.toISOString(),selectedDate:newWeekStart.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
   };
 
-  // Získání aktuálního měsíce a roku
-  const monthNames = [
-    "Leden", "Únor", "Březen", "Duben", "Květen", "Červen",
-    "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"
-  ];
-  const currentMonth = monthNames[currentWeek.getMonth()];
-  const currentYear = currentWeek.getFullYear();
+  const handleSwipePage = (direction) => {
+    if (direction === "left") {
+      router.push("/znamky");
+    } else if (direction === "right") {
+      router.push("/messages");
+    }
+  };
 
-  // Filtrování hodin pro vybraný den
+  const daysPanResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: (_, gestureState) => {
+      return Math.abs(gestureState.dx) > 10;
+    },
+    onPanResponderGrant: (evt) => {
+      swipeStartX.current = evt.nativeEvent.pageX;
+      swipeStartY.current = evt.nativeEvent.pageY;
+    },
+    onPanResponderMove: () => {},
+    onPanResponderRelease: (evt, gestureState) => {
+      const deltaX = evt.nativeEvent.pageX - swipeStartX.current;
+      const deltaY = Math.abs(evt.nativeEvent.pageY - swipeStartY.current);
+      
+      if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > deltaY) {
+        if (deltaX > 0) {
+          changeWeek(-1);
+        } else {
+          changeWeek(1);
+        }
+      }
+    },
+  });
+
+  const lessonsPanResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: (_, gestureState) => {
+      return Math.abs(gestureState.dx) > 10;
+    },
+    onPanResponderGrant: (evt) => {
+      swipeStartX.current = evt.nativeEvent.pageX;
+      swipeStartY.current = evt.nativeEvent.pageY;
+    },
+    onPanResponderMove: () => {},
+    onPanResponderRelease: (evt, gestureState) => {
+      const deltaX = evt.nativeEvent.pageX - swipeStartX.current;
+      const deltaY = Math.abs(evt.nativeEvent.pageY - swipeStartY.current);
+      
+      if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > deltaY) {
+        if (deltaX < 0) {
+          handleSwipePage("left");
+        } else {
+          handleSwipePage("right");
+        }
+      }
+    },
+  });
+
   const getLessonsForDay = (day) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:99',message:'getLessonsForDay called',data:{day:day?.fullDate?.toISOString(),lessonsCount:lessons.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-    // #endregion
     if (!day || !day.fullDate) return lessons;
-    const dayStr = day.fullDate.toISOString().split('T')[0]; // YYYY-MM-DD
-    // Filtrujeme hodiny podle data
+    const dayStr = day.fullDate.toISOString().split('T')[0];
     const filtered = lessons.filter(lesson => {
       if (lesson.date) {
         return lesson.date === dayStr;
       }
-      // Pokud není datum, zobrazíme všechny (pro mock data)
       return true;
     });
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:110',message:'getLessonsForDay result',data:{dayStr,filteredCount:filtered.length,allLessonsCount:lessons.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-    // #endregion
     return filtered;
   };
 
@@ -302,6 +356,27 @@ export default function Rozvrh() {
   };
 
   const renderLesson = (lesson) => {
+    const icons = [];
+    
+    if (lesson.hasGrade) {
+      icons.push(require("./assets/newgrade.png"));
+    }
+    if (lesson.hasNote) {
+      icons.push(require("./assets/note.png"));
+    }
+    if (lesson.isCancelled) {
+      icons.push(require("./assets/cancel.png"));
+    }
+    if (lesson.isConsultation) {
+      icons.push(require("./assets/special.png"));
+    }
+    if (lesson.isDifferentClass) {
+      icons.push(require("./assets/change.png"));
+    }
+    if (lesson.isEvent) {
+      icons.push(require("./assets/event.png"));
+    }
+
     return (
       <TouchableOpacity
         key={lesson._id}
@@ -311,6 +386,17 @@ export default function Rozvrh() {
           params: { lessonId: lesson._id }
         })}
       >
+        {icons.length > 0 && (
+          <View style={styles.iconsContainer}>
+            {icons.map((icon, index) => (
+              <Image
+                key={index}
+                source={icon}
+                style={styles.lessonIcon}
+              />
+            ))}
+          </View>
+        )}
         <View style={styles.lessonNumberBox}>
           <Text style={styles.lessonNumber}>{lesson.lessonNumber || lesson._id}</Text>
         </View>
@@ -329,45 +415,21 @@ export default function Rozvrh() {
 
   return (
     <View style={styles.container}>
-      <Header title="Rozvrh hodin" />
+      <Header title="Rozvrh hodin" showProfile={true} />
       
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Month selector */}
-        <View style={styles.monthRow}>
-          <TouchableOpacity 
-            onPress={() => {
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:171',message:'Previous week button pressed',data:{currentWeek:currentWeek.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-              // #endregion
-              changeWeek(-1);
-            }}
-            style={styles.arrowButton}
-          >
-            <Ionicons name="chevron-back" size={24} color="#666" />
-          </TouchableOpacity>
-          <Text style={styles.monthText}>
-            {currentMonth} {currentYear}
-          </Text>
-          <TouchableOpacity 
-            onPress={() => {
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:179',message:'Next week button pressed',data:{currentWeek:currentWeek.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-              // #endregion
-              changeWeek(1);
-            }}
-            style={styles.arrowButton}
-          >
-            <Ionicons name="chevron-forward" size={24} color="#666" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Days row */}
-        <View style={styles.daysRow}>
+        <View 
+          style={styles.daysRow}
+          {...daysPanResponder.panHandlers}
+        >
           {days.map(renderDay)}
         </View>
+        <View style={styles.daysDivider} />
 
-        {/* Lessons */}
-        <View style={styles.lessonsContainer}>
+        <View 
+          style={styles.lessonsContainer}
+          {...lessonsPanResponder.panHandlers}
+        >
           {dayLessons.length > 0 ? (
             dayLessons.map(renderLesson)
           ) : (
@@ -384,34 +446,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#ffffff",
   },
-  monthRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginVertical: 15,
-    paddingHorizontal: 20,
-  },
-  arrowButton: {
-    padding: 10,
-    minWidth: 44,
-    minHeight: 44,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  monthText: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginHorizontal: 20,
-  },
   daysRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    marginBottom: 20,
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  daysDivider: {
+    height: 1,
+    backgroundColor: "#E0E0E0",
+    marginHorizontal: 20,
+    marginBottom: 15,
   },
   dayBox: {
     width: "19%",
-    height: 70,
+    height: 65,
     borderRadius: 15,
     backgroundColor: "#F1F1F1",
     justifyContent: "center",
@@ -441,13 +491,12 @@ const styles = StyleSheet.create({
   },
   lesson: {
     flexDirection: "row",
-    marginBottom: 12,
-    padding: 15,
+    marginBottom: 8,
+    padding: 12,
     borderRadius: 12,
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#E0E0E0",
-    // iOS shadow
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -455,17 +504,18 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    // Android shadow
     elevation: 2,
+    minHeight: 70,
+    position: "relative",
   },
   lessonNumberBox: {
-    width: 40,
-    height: 40,
+    width: 35,
+    height: 35,
     borderRadius: 8,
     backgroundColor: "#ffffff",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 10,
   },
   lessonNumber: {
     fontSize: 16,
@@ -476,24 +526,37 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   lessonTime: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#666",
-    marginBottom: 4,
+    marginBottom: 3,
   },
   lessonTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
     color: "#000",
     marginBottom: 2,
   },
   lessonTeacher: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#444",
     marginBottom: 2,
   },
   lessonDetails: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#666",
+  },
+  iconsContainer: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    zIndex: 10,
+  },
+  lessonIcon: {
+    width: 20,
+    height: 20,
   },
   chevron: {
     marginLeft: 8,

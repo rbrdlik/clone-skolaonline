@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Alert, Image } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
 import { useAuth } from "./context/AuthContext";
 import { useRouter, useSegments } from "expo-router";
@@ -11,7 +12,6 @@ export default function Login() {
   const router = useRouter();
   const segments = useSegments();
 
-  // Pokud je uživatel přihlášen, přesměruj na rozvrh
   useEffect(() => {
     if (isAuthenticated) {
       router.replace("/rozvrh");
@@ -29,7 +29,6 @@ export default function Login() {
       const result = await login(username.trim(), password);
       
       if (result.success) {
-        // Přesměrování na hlavní stránku (rozvrh)
         router.replace("/rozvrh");
       } else {
         Alert.alert(
@@ -48,20 +47,8 @@ export default function Login() {
     }
   };
 
-  // Development mode - tlačítko pro přeskočení přihlášení
   const handleSkipLogin = () => {
-    // Mock přihlášení pro development
-    const mockUser = {
-      id: 'dev-user-1',
-      username: 'teststudent',
-      studentId: 'student-1',
-      name: 'Test Student',
-      class: '1A1',
-    };
-    
-    // Simulace úspěšného přihlášení
     login('dev', 'dev').then(() => {
-      // Pokud login selže (backend není dostupný), použijeme mock data
       setTimeout(() => {
         router.replace("/rozvrh");
       }, 100);
@@ -71,44 +58,47 @@ export default function Login() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        {/* Logo/Title */}
         <View style={styles.header}>
-          <Text style={styles.title}>Škola Online</Text>
-          <Text style={styles.subtitle}>Přihlaste se do svého účtu</Text>
-          {__DEV__ && (
-            <Text style={styles.devNote}>
-              Development Mode: Můžete přeskočit přihlášení
-            </Text>
-          )}
+          <Image 
+            source={require("./assets/icon.png")} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.appName}>MojeŠkola</Text>
         </View>
 
-        {/* Login Form */}
         <View style={styles.form}>
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Uživatelské jméno</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Zadejte uživatelské jméno"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!loading}
-            />
+            <View style={styles.inputWrapper}>
+              <Ionicons name="person" size={22} color="#000000" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Zadejte přihlašovací jméno..."
+                placeholderTextColor="#999"
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!loading}
+              />
+            </View>
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Heslo</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Zadejte heslo"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!loading}
-            />
+            <View style={styles.inputWrapper}>
+              <Ionicons name="lock-closed" size={22} color="#000000" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Zadejte heslo..."
+                placeholderTextColor="#999"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!loading}
+              />
+            </View>
           </View>
 
           <TouchableOpacity
@@ -123,7 +113,6 @@ export default function Login() {
             )}
           </TouchableOpacity>
 
-          {/* Development mode - tlačítko pro přeskočení */}
           {__DEV__ && (
             <TouchableOpacity
               style={styles.skipButton}
@@ -144,34 +133,30 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#F5F5F5",
   },
   content: {
     flex: 1,
     justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 30,
+    paddingBottom: 100,
   },
   header: {
     alignItems: "center",
-    marginBottom: 50,
+    justifyContent: "center",
+    marginBottom: 60,
+    width: "100%",
   },
-  title: {
-    fontSize: 32,
+  logo: {
+    width: 220,
+    height: 220,
+    marginBottom: -40,
+  },
+  appName: {
+    fontSize: 28,
     fontWeight: "700",
     color: "#4C8DEF",
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-  },
-  devNote: {
-    fontSize: 12,
-    color: "#999",
-    textAlign: "center",
-    marginTop: 8,
-    fontStyle: "italic",
   },
   form: {
     width: "100%",
@@ -179,29 +164,32 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 20,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 8,
-  },
-  input: {
-    height: 50,
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F9F9F9",
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "#E0E0E0",
-    borderRadius: 10,
     paddingHorizontal: 15,
+    height: 50,
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  input: {
+    flex: 1,
     fontSize: 16,
-    backgroundColor: "#F9F9F9",
+    color: "#333",
+    padding: 0,
   },
   loginButton: {
     height: 50,
     backgroundColor: "#4C8DEF",
-    borderRadius: 10,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 10,
-    // iOS shadow
+    marginTop: 20,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -209,7 +197,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    // Android shadow
     elevation: 3,
   },
   loginButtonDisabled: {

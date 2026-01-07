@@ -1,10 +1,12 @@
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import { View, StyleSheet, ActivityIndicator } from "react-native";
 import BottomNav from "./components/BottomNav";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { NotificationsProvider } from "./context/NotificationsContext";
 
 function RootLayoutNav() {
   const { isAuthenticated, loading } = useAuth();
+  const pathname = usePathname();
 
   if (loading) {
     return (
@@ -13,6 +15,8 @@ function RootLayoutNav() {
       </View>
     );
   }
+
+  const showBottomNav = isAuthenticated && pathname !== "/" && pathname !== "/index";
 
   return (
     <View style={styles.root}>
@@ -29,8 +33,7 @@ function RootLayoutNav() {
         </Stack>
       </View>
 
-      {/* Zobrazit navigaci pouze pokud je uživatel přihlášen */}
-      {isAuthenticated && <BottomNav />}
+      {showBottomNav && <BottomNav />}
     </View>
   );
 }
@@ -38,7 +41,9 @@ function RootLayoutNav() {
 export default function Layout() {
   return (
     <AuthProvider>
-      <RootLayoutNav />
+      <NotificationsProvider>
+        <RootLayoutNav />
+      </NotificationsProvider>
     </AuthProvider>
   );
 }

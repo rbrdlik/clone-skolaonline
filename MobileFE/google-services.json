@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "357118562220",
+    "project_id": "clone-skolaonline",
+    "storage_bucket": "clone-skolaonline.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:357118562220:android:8727ee035f0b7cf4667409",
+        "android_client_info": {
+          "package_name": "com.skolaonline.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADb2xdksLAqOAtNmgAk2EGPP6_pwrTLss"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

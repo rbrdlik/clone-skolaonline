@@ -1,21 +1,15 @@
-// Mock data pro známky - struktura odpovídá backend API
-
-// Funkce pro převod známky na číslo (pro výpočet průměru)
 const gradeToNumber = (grade) => {
   if (typeof grade === 'number') return grade;
   const gradeStr = String(grade).trim();
   
-  // Nejdřív zkontrolujeme znaménka, pak odstraníme
   const hasPlus = gradeStr.includes('+');
   const hasMinus = gradeStr.includes('-');
   
-  // Odstranění znamének pro získání čísla
   const cleanGrade = gradeStr.replace(/[+-]/g, '');
   const num = parseFloat(cleanGrade);
   
   if (isNaN(num)) return null;
   
-  // Úprava podle znamének
   if (hasPlus) {
     return num + 0.25;
   } else if (hasMinus) {
@@ -25,7 +19,6 @@ const gradeToNumber = (grade) => {
   return num;
 };
 
-// Funkce pro výpočet průměru z pole známek
 export const calculateAverage = (grades) => {
   if (!grades || grades.length === 0) return 0;
   
@@ -39,7 +32,6 @@ export const calculateAverage = (grades) => {
   return sum / numbers.length;
 };
 
-// Mock data pro předměty s reálnými známkami
 export const mockSubjectsWithGrades = {
   "cj-1": {
     subject: "Český jazyk a literatura",
@@ -73,9 +65,18 @@ export const mockSubjectsWithGrades = {
       { _id: "grade-aj-5", value: "2", name: "Prezentace", date: "5.12.2025", teacher: "Marie Svobodová", weight: 1.0 },
     ]
   },
+  "prog-1": {
+    subject: "Programování",
+    subjectId: "prog-1",
+    grades: [
+      { _id: "grade-prog-1", value: "1", name: "Projekt - Webová aplikace", date: "15.12.2025", teacher: "Věra Svárovská", weight: 2.0 },
+      { _id: "grade-prog-2", value: "1", name: "Test z Reactu", date: "10.12.2025", teacher: "Věra Svárovská", weight: 1.0 },
+      { _id: "grade-prog-3", value: "2", name: "Domácí úkol - Komponenty", date: "8.12.2025", teacher: "Věra Svárovská", weight: 1.0 },
+      { _id: "grade-prog-4", value: "1", name: "Praktická zkouška", date: "5.12.2025", teacher: "Věra Svárovská", weight: 1.5 },
+    ]
+  },
 };
 
-// Funkce pro získání předmětů s vypočítanými průměry
 export const getSubjectsWithAverages = () => {
   return Object.values(mockSubjectsWithGrades).map(subjectData => {
     const average = calculateAverage(subjectData.grades);
@@ -88,4 +89,3 @@ export const getSubjectsWithAverages = () => {
     };
   });
 };
-
