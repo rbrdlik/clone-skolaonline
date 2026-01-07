@@ -1,0 +1,124 @@
+@use "./variables";
+@use "./fonts";
+@use "./main-style.scss" as main;
+
+.header-admin {
+  width: 100%;
+  background: #ffffff;
+}
+
+.topbar {
+  height: 90px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  background: #ffffff;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  .logo {
+    height: 70px;
+  }
+  
+  .app-name {
+    font-size: 24px;
+    font-weight: 600;
+    color: variables.$main-blue;
+  }
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  .user-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .user-text {
+    line-height: 18px;
+    .user-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #111827;
+    }
+    .user-role {
+      font-size: 13px;
+      color: #6b7280;
+    }
+  }
+}
+
+.vertical-divider {
+  width: 1px;
+  height: 36px;
+  background: #e5e7eb;
+  margin: 0 8px;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+  
+  &:hover {
+    color: variables.$main-blue;
+  }
+}
+
+.nav {
+  height: 44px;
+  background: variables.$main-blue;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 5px;
+}
+
+.nav-link {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  position: relative;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  &.active {
+    font-weight: 600;
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 10px;
+      right: 10px;
+      height: 3px;
+      background: #ffffff;
+      border-radius: 2px 2px 0 0;
+    }
+  }
+}

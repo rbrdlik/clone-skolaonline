@@ -46,7 +46,6 @@ export default function Classes() {
                     >
                       Seznam studentů
                     </button>
-                    {/* Navigace na /timetable */}
                     <button 
                       className="btn-action secondary" 
                       onClick={() => navigate("/timetable")}
