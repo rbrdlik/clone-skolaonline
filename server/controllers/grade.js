@@ -1,100 +1,121 @@
 const Grade = require("../models/grade");
+const Subject = require("../models/subject");
+const User = require("../models/user");
 
-exports.createGrade = async (req, res) => {
+exports.getStudentGradesSummary = async (req, res) => {
   try {
-    const data = new Grade(req.body);
-    const result = await data.save();
-    if (result)
-      return res
-        .status(201)
-        .send({ message: "Grade created", payload: result });
-    res.status(404).send({ message: "Grade not created" });
-  } catch (e) {
-    res.status(500).send(e);
-  }
-};
+    const { studentId } = req.params;
 
-exports.updateGrade = async (req, res) => {
-  try {
-    const result = await Grade.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
+    const grades = await Grade.find({ student_id: studentId })
+      .populate("subject_id", "name")
+      .sort({ date: 1 });
+
+    const result = {};
+
+    grades.forEach(grade => {
+      const subjectId = grade.subject_id._id.toString();
+      const subjectName = grade.subject_id.name;
+
+      if (!result[subjectId]) {
+        result[subjectId] = {
+          subject: subjectName,
+          grades: [],
+          weightedSum: 0,
+          weightSum: 0
+        };
+      }
+
+      // seznam známek (jen hodnoty)
+      if (grade.value !== 0) {
+        result[subjectId].grades.push(grade.value);
+      } else {
+        result[subjectId].grades.push("NH");
+      }
+
+      // výpočet průměru (NH se nepočítá)
+      if (grade.value !== 0) {
+        result[subjectId].weightedSum += grade.value * grade.weight;
+        result[subjectId].weightSum += grade.weight;
+      }
     });
-    if (result)
-      return res
-        .status(200)
-        .send({ message: "Grade updated", payload: result });
-    res.status(404).send({ message: "Grade not updated" });
-  } catch (e) {
-    res.status(500).send(e);
+
+    const response = Object.values(result).map(item => ({
+      subject: item.subject,
+      average:
+        item.weightSum > 0
+          ? Number((item.weightedSum / item.weightSum).toFixed(2))
+          : null,
+      grades: item.grades
+    }));
+
+    res.status(200).json(response);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
-exports.deleteGrade = async (req, res) => {
+exports.getStudentGradesBySubject = async (req, res) => {
   try {
-    const result = await Grade.findByIdAndDelete(req.params.id);
-    if (result)
-      return res
-        .status(200)
-        .send({ message: "Grade deleted", payload: result });
-    res.status(404).send({ message: "Grade not deleted" });
-  } catch (e) {
-    res.status(500).send(e);
+    const { studentId, subjectId } = req.params;
+
+    const grades = await Grade.find({
+      student_id: studentId,
+      subject_id: subjectId
+    })
+      .populate("subject_id", "name")
+      .populate("teacher_id", "first_name last_name")
+      .sort({ date: -1 });
+
+    const response = grades.map(g => ({
+      value: g.value === 0 ? "NH" : g.value,
+      weight: g.weight,
+      description: g.description,
+      subject: g.subject_id.name,
+      teacher: `${g.teacher_id.first_name} ${g.teacher_id.last_name}`,
+      date: g.date
+    }));
+
+    res.status(200).json(response);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
-exports.getGradesByStudent = async (req, res) => {
+exports.createGradesBulk = async (req, res) => {
   try {
-    const data = await Grade.find({
-      student_id: req.params.studentId,
-    }).populate("student_id subject_id teacher_id class_id");
-    if (data.length)
-      return res.status(200).send({ message: "Grades found", payload: data });
-    res.status(404).send({ message: "Grades not found" });
-  } catch (e) {
-    res.status(500).send(e);
-  }
-};
+    const {
+      subject_id,
+      teacher_id,
+      class_id,
+      weight,
+      description,
+      grades
+    } = req.body;
 
-exports.getGradesByClass = async (req, res) => {
-  try {
-    const data = await Grade.find({ class_id: req.params.classId }).populate(
-      "student_id subject_id teacher_id class_id"
-    );
-    if (data.length)
-      return res.status(200).send({ message: "Grades found", payload: data });
-    res.status(404).send({ message: "Grades not found" });
-  } catch (e) {
-    res.status(500).send(e);
-  }
-};
+    if (!grades || !grades.length) {
+      return res.status(400).json({ message: "Nejsou zadány známky" });
+    }
 
-exports.getGradesBySubject = async (req, res) => {
-  try {
-    const data = await Grade.find({
-      subject_id: req.params.subjectId,
-    }).populate("student_id subject_id teacher_id class_id");
-    if (data.length)
-      return res.status(200).send({ message: "Grades found", payload: data });
-    res.status(404).send({ message: "Grades not found" });
-  } catch (e) {
-    res.status(500).send(e);
-  }
-};
+    const documents = grades.map(g => ({
+      student_id: g.student_id,
+      subject_id,
+      teacher_id,
+      class_id,
+      value: g.value, // 0 = NH
+      weight,
+      description
+    }));
 
-exports.getStudentAverage = async (req, res) => {
-  try {
-    const grades = await Grade.find({ student_id: req.params.studentId });
-    if (!grades.length)
-      return res.status(404).send({ message: "No grades found" });
+    const result = await Grade.insertMany(documents);
 
-    const total = grades.reduce((sum, g) => sum + g.value * g.weight, 0);
-    const weightSum = grades.reduce((sum, g) => sum + g.weight, 0);
-    const average = total / weightSum;
+    res.status(201).json({
+      message: "Známky vytvořeny",
+      count: result.length
+    });
 
-    res
-      .status(200)
-      .send({ message: "Student average calculated", payload: { average } });
-  } catch (e) {
-    res.status(500).send(e);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

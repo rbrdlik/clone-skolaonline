@@ -13,15 +13,12 @@ mongoose
 .then(() => {console.log("Database connected")})
 .catch((err) => {console.log(err)})
 
-const { swaggerDocs } = require('./swagger');
-
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 
 const authRouter = require("./routes/auth");
 const userRouter = require("./routes/user");
 const classRouter = require("./routes/class");
-const groupRouter = require("./routes/group");
 const subjectRouter = require("./routes/subject");
 const gradeRouter = require("./routes/grade");
 const scheduleRouter = require("./routes/schedule");
@@ -29,8 +26,6 @@ const scheduleChangesRouter = require("./routes/scheduleChanges");
 const messageRouter = require("./routes/message");
 
 const app = express();
-
-swaggerDocs(app);
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -47,7 +42,6 @@ app.use('/users', usersRouter);
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
 app.use("/class", classRouter);
-app.use("/group", groupRouter);
 app.use("/grade", gradeRouter);
 app.use("/subject", subjectRouter);
 app.use("/schedule", scheduleRouter);
