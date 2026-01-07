@@ -5,6 +5,9 @@ const gradeToNumber = (grade) => {
   if (typeof grade === 'number') return grade;
   const gradeStr = String(grade).trim();
   
+  const hasPlus = gradeStr.includes('+');
+  const hasMinus = gradeStr.includes('-');
+  
   // Nejdřív zkontrolujeme znaménka, pak odstraníme
   const hasPlus = gradeStr.includes('+');
   const hasMinus = gradeStr.includes('-');
@@ -73,6 +76,18 @@ export const mockSubjectsWithGrades = {
       { _id: "grade-aj-5", value: "2", name: "Prezentace", date: "5.12.2025", teacher: "Marie Svobodová", weight: 1.0 },
     ]
   },
+  "prog-1": {
+    subject: "Programování",
+    subjectId: "prog-1",
+    grades: [
+      { _id: "grade-prog-1", value: "1", name: "Projekt - Webová aplikace", date: "15.12.2025", teacher: "Věra Svárovská", weight: 2.0 },
+      { _id: "grade-prog-2", value: "1", name: "Test z Reactu", date: "10.12.2025", teacher: "Věra Svárovská", weight: 1.0 },
+      { _id: "grade-prog-3", value: "2", name: "Domácí úkol - Komponenty", date: "8.12.2025", teacher: "Věra Svárovská", weight: 1.0 },
+      { _id: "grade-prog-4", value: "1", name: "Praktická zkouška", date: "5.12.2025", teacher: "Věra Svárovská", weight: 1.5 },
+    ]
+  },
+};
+
 };
 
 // Funkce pro získání předmětů s vypočítanými průměry

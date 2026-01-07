@@ -1,3 +1,12 @@
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, PanResponder } from "react-native";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useAuth } from "./context/AuthContext";
+import { api } from "./services/api";
+import { useRouter, useFocusEffect } from "expo-router";
+import Header from "./components/Header";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useState, useEffect } from "react";
 import { useAuth } from "./context/AuthContext";
@@ -42,6 +51,47 @@ export default function Messages() {
   const router = useRouter();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("all");
+  const swipeStartXRef = useRef(0);
+  const swipeStartYRef = useRef(0);
+
+  const loadMessages = useCallback(async () => {
+    setLoading(true);
+    let loadedMessages = [];
+    
+    try {
+      const studentId = user?.studentId;
+      if (studentId) {
+        const data = await api.getMessages(studentId);
+        loadedMessages = data.messages || [];
+      } else {
+        loadedMessages = [...mockMessagesData];
+      }
+    } catch (error) {
+      console.error("Error loading messages:", error);
+      loadedMessages = [...mockMessagesData];
+    }
+    
+    try {
+      const readMessages = await AsyncStorage.getItem('readMessages') || '[]';
+      const readMessagesArray = JSON.parse(readMessages);
+      loadedMessages = loadedMessages.map(msg => 
+        readMessagesArray.includes(msg._id) ? { ...msg, read: true } : msg
+      );
+    } catch (error) {
+      console.error("Error loading read messages from storage:", error);
+    }
+    
+    setMessages(loadedMessages);
+    setLoading(false);
+  }, [user?.studentId]);
+
+  useEffect(() => {
+    loadMessages();
+  }, [filter, loadMessages]);
+
+  const handleMessagePress = async (messageId) => {
+    await markMessageAsRead(messageId);
   const [filter, setFilter] = useState("all"); // "all" or "unread"
 
   useEffect(() => {
@@ -73,6 +123,80 @@ export default function Messages() {
     });
   };
 
+  const markMessageAsRead = async (messageId) => {
+    try {
+      if (user?.studentId) {
+        await api.markMessageAsRead(user.studentId, messageId);
+      }
+      
+      setMessages(prevMessages => 
+        prevMessages.map(msg => 
+          msg._id === messageId ? { ...msg, read: true } : msg
+        )
+      );
+      
+      const readMessages = await AsyncStorage.getItem('readMessages') || '[]';
+      const readMessagesArray = JSON.parse(readMessages);
+      if (!readMessagesArray.includes(messageId)) {
+        readMessagesArray.push(messageId);
+        await AsyncStorage.setItem('readMessages', JSON.stringify(readMessagesArray));
+      }
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+      setMessages(prevMessages => 
+        prevMessages.map(msg => 
+          msg._id === messageId ? { ...msg, read: true } : msg
+        )
+      );
+    }
+  };
+
+  const swipePanResponderRef = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dx) > 10;
+      },
+      onPanResponderGrant: (evt) => {
+        swipeStartXRef.current = evt.nativeEvent.pageX;
+        swipeStartYRef.current = evt.nativeEvent.pageY;
+      },
+      onPanResponderMove: () => {},
+      onPanResponderRelease: (evt) => {
+        const deltaX = evt.nativeEvent.pageX - swipeStartXRef.current;
+        const deltaY = Math.abs(evt.nativeEvent.pageY - swipeStartYRef.current);
+        
+        if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > deltaY) {
+          if (deltaX < 0) {
+            router.push("/rozvrh");
+          } else {
+            router.push("/znamky");
+          }
+        }
+      },
+    })
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      const updateReadStatus = async () => {
+        try {
+          const readMessages = await AsyncStorage.getItem('readMessages') || '[]';
+          const readMessagesArray = JSON.parse(readMessages);
+          
+          setMessages(prevMessages => 
+            prevMessages.map(msg => 
+              readMessagesArray.includes(msg._id) ? { ...msg, read: true } : msg
+            )
+          );
+        } catch (error) {
+          console.error("Error updating read status:", error);
+        }
+      };
+      updateReadStatus();
+    }, [])
+  );
+
   // Seskupení zpráv podle měsíců
   const groupedMessages = messages.reduce((acc, msg) => {
     const month = msg.month || "Ostatní";
@@ -97,6 +221,16 @@ export default function Messages() {
     return acc;
   }, {});
 
+  const panHandlers = swipePanResponderRef.current.panHandlers;
+
+  return (
+    <View style={styles.container}>
+      <Header title="Zprávy" showProfile={true} />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={styles.scrollView}
+        {...panHandlers}
+      >
   return (
     <View style={styles.container}>
       <Header title="Zprávy" />
@@ -113,6 +247,7 @@ export default function Messages() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
+            style={[styles.filterButton, styles.filterButtonSecond, filter === "unread" && styles.filterButtonActive]}
             style={[styles.filterButton, filter === "unread" && styles.filterButtonActive]}
             onPress={() => setFilter("unread")}
           >
@@ -182,6 +317,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: "#F5F5F5",
+  },
+  filterButtonSecond: {
+    marginLeft: 10,
   },
   filterButtonActive: {
     backgroundColor: "#4C8DEF",
@@ -273,3 +411,4 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 });
+

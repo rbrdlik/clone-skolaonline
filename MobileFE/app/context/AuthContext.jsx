@@ -138,6 +138,13 @@ export function AuthProvider({ children }) {
   async function logout() {
     try {
       await api.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+      await removeToken();
+    } finally {
+      setToken(null);
+      setUser(null);
+      setIsAuthenticated(false);
       setToken(null);
       setUser(null);
       setIsAuthenticated(false);
