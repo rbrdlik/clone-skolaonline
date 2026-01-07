@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-nati
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Header from "./components/Header";
 import { Ionicons } from "@expo/vector-icons";
+import { getLessonDetail } from "./data/lessons";
 
 // Mock data - v reálné aplikaci by se načítalo z API
 const mockLessonData = {
@@ -31,6 +32,7 @@ export default function LessonDetail() {
   const { lessonId } = useLocalSearchParams();
   const router = useRouter();
   
+  const lesson = getLessonDetail(lessonId || "default");
   // V reálné aplikaci by se načítalo z API podle lessonId
   const lesson = mockLessonData;
 

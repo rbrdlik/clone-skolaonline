@@ -8,7 +8,6 @@ export default function SubjectDetail() {
   const { subjectId } = useLocalSearchParams();
   const router = useRouter();
   
-  // Načtení dat podle subjectId
   const subjectData = mockSubjectsWithGrades[subjectId] || mockSubjectsWithGrades["cj-1"];
   const subjectName = subjectData.subject;
   const grades = subjectData.grades || [];
@@ -25,7 +24,6 @@ export default function SubjectDetail() {
       <Header title={subjectName} showBack />
       
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
-        {/* Grades List */}
         <View style={styles.gradesContainer}>
           {grades.map((grade) => (
             <TouchableOpacity
@@ -73,7 +71,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     padding: 15,
     alignItems: "center",
-    // iOS shadow
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -81,7 +78,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    // Android shadow
     elevation: 2,
   },
   gradeValueBox: {

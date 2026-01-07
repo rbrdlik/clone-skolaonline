@@ -1,3 +1,5 @@
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Alert, Image } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import { useState, useEffect } from "react";
 import { useAuth } from "./context/AuthContext";
@@ -48,6 +50,8 @@ export default function Login() {
     }
   };
 
+  const handleSkipLogin = () => {
+    login('dev', 'dev').then(() => {
   // Development mode - tlačítko pro přeskočení přihlášení
   const handleSkipLogin = () => {
     // Mock přihlášení pro development
@@ -71,6 +75,47 @@ export default function Login() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
+        <View style={styles.header}>
+          <Image 
+            source={require("./assets/icon.png")} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.appName}>MojeŠkola</Text>
+        </View>
+
+        <View style={styles.form}>
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="person" size={22} color="#000000" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Zadejte přihlašovací jméno..."
+                placeholderTextColor="#999"
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!loading}
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWrapper}>
+              <Ionicons name="lock-closed" size={22} color="#000000" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Zadejte heslo..."
+                placeholderTextColor="#999"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!loading}
+              />
+            </View>
         {/* Logo/Title */}
         <View style={styles.header}>
           <Text style={styles.title}>Škola Online</Text>
@@ -144,11 +189,31 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#F5F5F5",
     backgroundColor: "#ffffff",
   },
   content: {
     flex: 1,
     justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 30,
+    paddingBottom: 100,
+  },
+  header: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 60,
+    width: "100%",
+  },
+  logo: {
+    width: 220,
+    height: 220,
+    marginBottom: -40,
+  },
+  appName: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#4C8DEF",
     paddingHorizontal: 30,
   },
   header: {
@@ -179,6 +244,24 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 20,
   },
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F9F9F9",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    paddingHorizontal: 15,
+    height: 50,
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: "#333",
+    padding: 0,
   label: {
     fontSize: 14,
     fontWeight: "600",
@@ -197,6 +280,10 @@ const styles = StyleSheet.create({
   loginButton: {
     height: 50,
     backgroundColor: "#4C8DEF",
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 20,
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",

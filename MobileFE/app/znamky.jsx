@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, PanResponder } from "react-native";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "./context/AuthContext";
 import { api } from "./services/api";
 import { useRouter } from "expo-router";
@@ -7,18 +7,17 @@ import Header from "./components/Header";
 import { Ionicons } from "@expo/vector-icons";
 import { getSubjectsWithAverages } from "./data/grades";
 
-// Funkce pro určení barvy podle průměru
 const getAverageColor = (average) => {
   if (average >= 1.0 && average < 1.5) {
-    return "#C8E6C9"; // Zelená pro 1.00-1.49
+    return "#C8E6C9";
   } else if (average >= 1.5 && average < 2.5) {
-    return "#C8E6C9"; // Zelená pro 1.50-2.49
+    return "#C8E6C9";
   } else if (average >= 2.5 && average < 3.5) {
-    return "#FFE5B4"; // Oranžová pro 2.50-3.49
+    return "#FFE5B4";
   } else if (average >= 3.5 && average < 4.5) {
-    return "#FFE5B4"; // Oranžová pro 3.50-4.49
+    return "#FFE5B4";
   } else {
-    return "#FFCDD2"; // Červená pro 4.50-5.00
+    return "#FFCDD2";
   }
 };
 
@@ -28,6 +27,8 @@ export default function Znamky() {
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSemester, setSelectedSemester] = useState(1);
+  const swipeStartX = useRef(0);
+  const swipeStartY = useRef(0);
 
   useEffect(() => {
     loadGrades();
@@ -38,21 +39,13 @@ export default function Znamky() {
     try {
       if (user?.studentId) {
         const data = await api.getGrades(user.studentId, selectedSemester);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'znamky.jsx:60',message:'API grades loaded',data:{subjectsCount:data.subjects?.length,subjects:data.subjects},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         setSubjects(data.subjects || []);
       } else {
-        // Fallback na mock data s vypočítanými průměry
         const subjectsWithAverages = getSubjectsWithAverages();
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'znamky.jsx:65',message:'Using mock data with calculated averages',data:{subjects:subjectsWithAverages.map(s=>({subject:s.subject,average:s.average,gradeCount:s.gradeCount}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         setSubjects(subjectsWithAverages);
       }
     } catch (error) {
       console.error("Error loading grades:", error);
-      // Fallback na mock data s vypočítanými průměry
       const subjectsWithAverages = getSubjectsWithAverages();
       setSubjects(subjectsWithAverages);
     } finally {
@@ -67,15 +60,39 @@ export default function Znamky() {
     });
   };
 
+  const swipePanResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: (_, gestureState) => {
+      return Math.abs(gestureState.dx) > 10;
+    },
+    onPanResponderGrant: (evt) => {
+      swipeStartX.current = evt.nativeEvent.pageX;
+      swipeStartY.current = evt.nativeEvent.pageY;
+    },
+    onPanResponderMove: () => {},
+    onPanResponderRelease: (evt, gestureState) => {
+      const deltaX = evt.nativeEvent.pageX - swipeStartX.current;
+      const deltaY = Math.abs(evt.nativeEvent.pageY - swipeStartY.current);
+      
+      if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > deltaY) {
+        if (deltaX < 0) {
+          router.push("/messages");
+        } else {
+          router.push("/rozvrh");
+        }
+      }
+    },
+  });
+
   return (
     <View style={styles.container}>
-      <Header title="Hodnocení v předmětu" />
+      <Header title="Hodnocení v předmětu" showProfile={true} />
       
       <ScrollView 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        {...swipePanResponder.panHandlers}
       >
-        {/* Semester Filter */}
         <View style={styles.filterContainer}>
           <TouchableOpacity style={styles.filterButton}>
             <Ionicons name="share-outline" size={16} color="#666" />
@@ -83,7 +100,6 @@ export default function Znamky() {
           </TouchableOpacity>
         </View>
 
-        {/* Subjects List */}
         <View style={styles.subjectsListContainer}>
           {subjects.map((subject) => (
             <SubjectCard
@@ -102,11 +118,6 @@ export default function Znamky() {
 }
 
 function SubjectCard({ subject, average, gradeCount, color, onPress }) {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'znamky.jsx:102',message:'SubjectCard rendered',data:{subject,average,gradeCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-  // #endregion
-  
-  // Zajištění, že average je validní číslo
   const displayAverage = (average != null && !isNaN(average)) ? average : 0;
   const displayCount = gradeCount || 0;
   
@@ -164,7 +175,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     padding: 15,
     alignItems: "center",
-    // iOS shadow
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -172,7 +182,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    // Android shadow
     elevation: 2,
   },
   averageBox: {
