@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom"; 
+import { NavLink, useNavigate, Link } from "react-router-dom"; // Přidán Link
 import "../../scss/Navbar.scss";
 import logo from "../../assets/icons/logo-notext.png";
 import signedinuser from "../../assets/icons/signedin-user.png";
@@ -14,10 +14,10 @@ export default function Navbar() {
     <>
       <header className="header">
         <div className="topbar">
-          <div className="topbar-left">
+          <Link to="/" className="topbar-left" style={{ textDecoration: 'none', color: 'inherit' }}>
             <img src={logo} alt="MojeŠkola" className="logo" />
             <span className="app-name">MojeŠkola</span>
-          </div>
+          </Link>
 
           <div className="topbar-right">
             <img src={signedinuser} alt="uživatel" className="user-avatar" />

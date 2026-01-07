@@ -1,0 +1,116 @@
+@use "./variables";
+@use "./fonts";
+@use "./main-style.scss" as main;
+
+.create-teacher-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7f9;
+  overflow: hidden;
+
+  .main-content {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .form-card {
+    background: white;
+    width: 100%;
+    max-width: 1200px;
+    border-radius: 20px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+
+    .card-header {
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #eee;
+
+      .icon-wrapper {
+        background: #4a90e2;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+      }
+
+      h1 { font-size: 1rem; font-weight: 600; margin: 0; color: #333; }
+    }
+
+    .card-body {
+      padding: 2.5rem 2rem;
+
+      .teacher-grid-form {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr); 
+        gap: 2rem 1.5rem;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        label {
+          font-weight: 600;
+          font-size: 0.85rem;
+          color: #333;
+        }
+
+        .text-input, .select-input {
+          background-color: #ececec;
+          border: none;
+          border-radius: 12px;
+          padding: 0 1rem;
+          font-size: 0.9rem;
+          outline: none;
+          height: 45px;
+          transition: background 0.2s;
+
+          &:focus {
+            background-color: darken(#ececec, 3%);
+          }
+        }
+
+        .select-input {
+          appearance: none;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 1rem center;
+          background-size: 1em;
+          cursor: pointer;
+        }
+      }
+
+      .card-footer {
+        margin-top: 4rem;
+        display: flex;
+        justify-content: flex-end;
+
+        .btn-create {
+          background-color: #4a90e2;
+          color: white;
+          border: none;
+          padding: 0.8rem 3.5rem;
+          border-radius: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+          transition: transform 0.1s;
+
+          &:active { transform: scale(0.98); }
+        }
+      }
+    }
+  }
+}

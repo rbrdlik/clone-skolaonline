@@ -1,0 +1,99 @@
+@use "./variables";
+@use "./fonts";
+@use "./main-style.scss" as main;
+
+.edit-teacher-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7f9;
+
+  .main-content {
+    flex: 1;
+    padding: 30px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .form-card {
+    background: white;
+    width: 100%;
+    max-width: 1200px;
+    border-radius: 20px;
+    border: 1px solid #e0e0e0;
+    height: fit-content;
+
+    .card-header {
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      border-bottom: 1px solid #eee;
+
+      .blue-circle {
+        background-color: #4a90e2; 
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      h1 { font-size: 1rem; font-weight: 600; margin: 0; }
+    }
+
+    .card-body {
+      padding: 2.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr); 
+        gap: 25px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        label {
+          font-weight: 600;
+          font-size: 0.8rem;
+          color: #333;
+        }
+
+        .gray-input, .gray-select {
+          background-color: #ececec;
+          border: none;
+          border-radius: 10px;
+          padding: 12px 15px;
+          font-size: 0.85rem;
+          height: 45px;
+          outline: none;
+        }
+
+        &.empty { visibility: hidden; }
+      }
+
+      .form-footer {
+        margin-top: 50px;
+        display: flex;
+        justify-content: flex-end;
+
+        .btn-save {
+          background-color: #4a90e2; 
+          color: white;
+          border: none;
+          padding: 12px 50px;
+          border-radius: 10px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+}

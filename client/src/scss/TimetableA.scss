@@ -1,0 +1,125 @@
+@use "./variables";
+@use "./fonts";
+@use "./main-style.scss" as main;
+
+.schedule-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7f9;
+  overflow: hidden;
+
+  .main-content {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .schedule-card {
+    background: white;
+    width: 100%;
+    max-width: 1800px;
+    border-radius: 20px;
+    border: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+
+    .card-header {
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #eee;
+
+      h1 { font-size: 0.95rem; font-weight: 600; margin: 0; }
+    }
+
+    .schedule-wrapper {
+      flex: 1;
+      padding: 15px;
+      overflow-x: auto; 
+    }
+
+    .schedule-grid {
+      display: grid;
+
+      grid-template-columns: 70px repeat(13, 1fr); 
+      gap: 6px;
+
+      .hour-block {
+        background: #8e8e8e;
+        color: white;
+        border-radius: 12px;
+        padding: 8px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        .num { font-weight: bold; font-size: 1rem; }
+        .time { font-size: 0.6rem; opacity: 0.8; }
+      }
+    }
+
+    .day-row {
+      display: contents; 
+
+      .day-info {
+        background: #8e8e8e;
+        color: white;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 6px;
+
+        .name { font-weight: bold; font-size: 1.1rem; }
+        .date { font-size: 0.7rem; }
+      }
+
+      .schedule-cell {
+        background: #fff0eb; 
+        border-radius: 12px;
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 6px;
+
+        .cell-select, .cell-input {
+          width: 100%;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          border-radius: 6px;
+          padding: 3px 5px;
+          font-size: 0.65rem;
+          background: white;
+          outline: none;
+          height: 25px;
+        }
+
+        .cell-select {
+          cursor: pointer;
+        }
+      }
+    }
+
+    .card-footer {
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: flex-end;
+      border-top: 1px solid #eee;
+
+      .btn-save {
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        padding: 10px 40px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+    }
+  }
+}
