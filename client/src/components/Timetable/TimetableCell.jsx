@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
 
-export default function TimetableCell({ lesson }) {
+export default function TimetableCell({ lesson, selectedDate }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
@@ -16,30 +17,81 @@ export default function TimetableCell({ lesson }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const handleGradingClick = () => {
+    if (lesson && lesson.classId && lesson.subjectId && lesson.teacherId && lesson.hour !== undefined) {
+      const date = format(selectedDate, "yyyy-MM-dd");
+      const params = new URLSearchParams({
+        classId: lesson.classId,
+        subjectId: lesson.subjectId,
+        teacherId: lesson.teacherId,
+        date: date,
+        hour: lesson.hour.toString(),
+        dayOfWeek: lesson.dayOfWeek?.toString() || ""
+      });
+      navigate(`/grading?${params.toString()}`);
+    } else {
+      navigate("/grading");
+    }
+    setOpen(false);
+  };
+
   return (
     <div className="lesson-wrapper">
       <div
-        className={`lesson-cell ${lesson ? "filled" : ""}`}
+        className={`lesson-cell ${lesson ? "filled" : ""} ${lesson?.isCancelled ? "cancelled" : ""} ${lesson?.changeType === "change" || lesson?.changeType === "room_change" ? "substitution" : ""}`}
         onContextMenu={(e) => {
           e.preventDefault();
-          setOpen(true);
+          if (lesson) {
+            setOpen(true);
+          }
         }}
       >
         {lesson && (
           <>
+            {lesson.hasGrades && <div className="grade-indicator">Z</div>}
+            {lesson.note && (
+              <div className="note-indicator" title={lesson.note}>
+                P
+              </div>
+            )}
             <strong>{lesson.subject}</strong>
-            <span>{lesson.class}</span>
-            <span>{lesson.room}</span>
+            {lesson.teacher && (
+              <span className={lesson.isTeacherChanged ? "changed-text" : ""}>
+                {lesson.teacher}
+              </span>
+            )}
+            {lesson.room && (
+              <span className={lesson.isRoomChanged ? "changed-text" : ""}>
+                {lesson.room}
+              </span>
+            )}
+            {lesson.class && <span>{lesson.class}</span>}
           </>
         )}
       </div>
 
-      {open && (
+      {open && lesson && (
         <div className="context-menu" ref={menuRef}>
-          <button onClick={() => navigate("/grading")}>
+          <button onClick={handleGradingClick}>
             Zadat hodnocení
           </button>
-          <button onClick={() => navigate("/timetable-change")}>
+          <button onClick={() => {
+            if (lesson && lesson.classId && lesson.subjectId && lesson.teacherId && lesson.hour !== undefined) {
+              const date = format(selectedDate, "yyyy-MM-dd");
+              const params = new URLSearchParams({
+                classId: lesson.classId,
+                subjectId: lesson.subjectId,
+                teacherId: lesson.teacherId,
+                date: date,
+                hour: lesson.hour.toString(),
+                room: lesson.room || ""
+              });
+              navigate(`/timetable-change?${params.toString()}`);
+            } else {
+              navigate("/timetable-change");
+            }
+            setOpen(false);
+          }}>
             Změna v rozvrhu
           </button>
         </div>

@@ -3,102 +3,132 @@
 @use "./main-style.scss" as main;
 
 .edit-class-page {
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
   background-color: #f5f7f9;
+  overflow: hidden;
 
   .main-content {
-    padding: 40px;
+    flex: 1;
+    padding: 24px;
     display: flex;
     justify-content: center;
+    align-items: flex-start;
   }
 
   .form-card {
     background: white;
     width: 100%;
-    max-width: 1100px;
+    max-width: 1800px;
     border-radius: 20px;
     border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 
     .card-header {
-      padding: 20px 30px;
+      padding: 1.2rem 2rem;
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 12px;
       border-bottom: 1px solid #eee;
-
-      .blue-circle {
-        background-color: #4a90e2;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
       h1 { font-size: 1rem; font-weight: 600; margin: 0; }
     }
 
-    .card-body.split-layout {
-      padding: 40px 30px;
-      display: grid;
-      grid-template-columns: 1fr 1fr; 
-      gap: 60px;
+    .card-body {
+      padding: 2.5rem 2rem;
 
-      .form-group {
-        margin-bottom: 25px;
+      .subject-flex-container {
+        display: flex;
+        gap: 80px;
+      }
+
+      .left-column {
+        flex: 0 0 350px; 
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 2rem;
+      }
 
+      .right-column {
+        flex: 1; 
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
         label { font-weight: 600; font-size: 0.85rem; }
-
-        .gray-input, .gray-select {
+        .text-input, .select-input {
           background-color: #ececec;
           border: none;
-          border-radius: 10px;
-          padding: 12px 15px;
+          border-radius: 12px;
+          padding: 0.8rem 1rem;
           outline: none;
+          height: 45px;
+          font-size: 0.9rem;
+        }
+
+        .select-input {
+          appearance: none;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 1rem center;
+          background-size: 1em;
+          cursor: pointer;
         }
       }
 
-      .student-list {
-        margin-top: 20px;
+      .assigned-list {
+        margin-top: 10px;
         border-top: 1px solid #eee;
+        padding-top: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 300px;
+        overflow-y: auto;
 
-        .student-row {
+        .teacher-item {
           display: flex;
           justify-content: space-between;
-          padding: 10px 0;
-          border-bottom: 1px solid #f9f9f9;
-
-          .student-name { font-weight: 600; font-size: 0.85rem; }
+          align-items: center;
+          font-weight: 600;
+          font-size: 0.9rem;
 
           .btn-remove {
             background: none;
             border: none;
-            color: #ff4d4d; 
+            color: #ff4d4d;
             text-decoration: underline;
-            font-size: 0.85rem;
             cursor: pointer;
+            font-size: 0.85rem;
+            &:hover { color: #cc0000; }
           }
         }
       }
-    }
 
-    .form-footer {
-      padding: 0 30px 40px;
-      display: flex;
-      justify-content: flex-end;
+      .card-footer {
+        margin-top: 3rem;
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
 
-      .btn-save {
-        background-color: #4a90e2; 
-        color: white;
-        border: none;
-        padding: 12px 60px;
-        border-radius: 10px;
-        font-weight: 600;
-        cursor: pointer;
+        .btn-create {
+          background-color: #4a90e2;
+          color: white;
+          border: none;
+          padding: 0.8rem 3rem;
+          border-radius: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+          width: 100%;
+
+          &:hover { opacity: 0.9; }
+        }
       }
     }
   }

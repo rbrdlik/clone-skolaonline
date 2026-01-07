@@ -1,4 +1,5 @@
 const User = require("../models/user");
+const Class = require("../models/class");
 
 exports.getAllUsers = async (req, res) => {
   try {
