@@ -24,7 +24,7 @@ export default function BottomNav() {
 
   const getIndexFromPath = () => {
     const currentPath = pathname || segments.join("/") || "/";
-    if (currentPath === "/messages" || currentPath?.startsWith("/messages")) return 0;
+    if (currentPath === "/Messages" || currentPath?.startsWith("/Messages")) return 0;
     if (currentPath === "/rozvrh" || currentPath?.startsWith("/rozvrh")) return 1;
     if (currentPath === "/znamky" || currentPath?.startsWith("/znamky")) return 2;
     return 1;
@@ -34,8 +34,6 @@ export default function BottomNav() {
     const index = getIndexFromPath();
     Animated.spring(translateX, {
       toValue: index * itemWidth,
-    Animated.spring(translateX, {
-      toValue: getIndexFromPath() * itemWidth,
       useNativeDriver: true,
       speed: 20,
       bounciness: 8,
@@ -51,16 +49,12 @@ export default function BottomNav() {
             {
               width: itemWidth * 0.85,
               marginLeft: itemWidth * 0.075,
-              width: itemWidth,
               transform: [{ translateX }],
             },
           ]}
         />
 
-        <NavItem href="/messages" iconName="chatbubble" index={0} />
-        <NavItem href="/rozvrh" iconName="calendar" index={1} />
-        <NavItem href="/znamky" iconName="star" index={2} />
-        <NavItem href="/messages" iconName="chatbubble" />
+        <NavItem href="/Messages" iconName="chatbubble" />
         <NavItem href="/rozvrh" iconName="calendar" />
         <NavItem href="/znamky" iconName="star" />
       </View>
@@ -93,7 +87,7 @@ function NavItem({ href, iconName }) {
         <Ionicons 
           name={iconName} 
           size={24} 
-          color={isActive ? "#7d8aff" : "black"} 
+          color={isActive ? "#ffffff" : "#000000"} 
         />
       </TouchableOpacity>
     </Link>
@@ -109,8 +103,6 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    width: "100%",
-    alignItems: "center",
     zIndex: 100,
     elevation: 100,
   },
@@ -122,7 +114,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
     position: "relative",
     overflow: "hidden",
     // iOS shadow
@@ -140,8 +131,7 @@ const styles = StyleSheet.create({
   indicator: {
     position: "absolute",
     left: 0,
-    top: 10,
-    height: 50,
+    top: 1,
     height: 50,
     margin: 10,
     borderRadius: 25,

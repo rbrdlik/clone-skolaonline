@@ -145,11 +145,6 @@ export function AuthProvider({ children }) {
       setToken(null);
       setUser(null);
       setIsAuthenticated(false);
-      setToken(null);
-      setUser(null);
-      setIsAuthenticated(false);
-    } catch (error) {
-      console.error('Logout error:', error);
     }
   }
 

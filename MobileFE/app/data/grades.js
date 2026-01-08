@@ -88,8 +88,6 @@ export const mockSubjectsWithGrades = {
   },
 };
 
-};
-
 // Funkce pro získání předmětů s vypočítanými průměry
 export const getSubjectsWithAverages = () => {
   return Object.values(mockSubjectsWithGrades).map(subjectData => {

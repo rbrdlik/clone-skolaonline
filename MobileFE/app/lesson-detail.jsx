@@ -34,6 +34,7 @@ export default function LessonDetail() {
   
   const lesson = getLessonDetail(lessonId || "default");
   // V reálné aplikaci by se načítalo z API podle lessonId
+  // const lesson = getLessonDetail(lessonId || "default");
   const lesson = mockLessonData;
 
   return (

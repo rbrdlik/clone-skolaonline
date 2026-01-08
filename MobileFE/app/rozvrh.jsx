@@ -1,7 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, PanResponder, Image } from "react-native";
 import { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { useState, useEffect } from "react";
 import { useAuth } from "./context/AuthContext";
 import { api } from "./services/api";
 import { timetableData } from "./data/timetable";
@@ -19,13 +17,6 @@ export default function Rozvrh() {
   const [selectedDate, setSelectedDate] = useState(null);
   const swipeStartX = useRef(0);
   const swipeStartY = useRef(0);
-
-  useEffect(() => {
-    loadTimetable();
-  }, [currentWeek]);
-
-  // selectedDate se inicializuje po načtení dní
-  const [selectedDate, setSelectedDate] = useState(null);
 
   useEffect(() => {
     // #region agent log
@@ -155,9 +146,6 @@ export default function Rozvrh() {
         isConsultation: false,
         isDifferentClass: false,
         isEvent: true,
-      },
-    ];
-
       },
     ];
 
@@ -294,15 +282,6 @@ export default function Rozvrh() {
     return `${year}-${month}-${day}`;
   };
 
-  const changeWeek = (direction) => {
-    const newWeek = new Date(currentWeek);
-    newWeek.setDate(newWeek.getDate() + (direction * 7));
-    setCurrentWeek(newWeek);
-    const newWeekStart = new Date(newWeek);
-    newWeekStart.setDate(newWeekStart.getDate() - newWeekStart.getDay() + 1);
-    setSelectedDate(newWeekStart);
-  };
-
   const handleSwipePage = (direction) => {
     if (direction === "left") {
       router.push("/znamky");
@@ -359,9 +338,6 @@ export default function Rozvrh() {
     },
   });
 
-  const getLessonsForDay = (day) => {
-    if (!day || !day.fullDate) return lessons;
-    const dayStr = day.fullDate.toISOString().split('T')[0];
   // Změna týdne
   const changeWeek = (direction) => {
     // #region agent log
@@ -420,7 +396,7 @@ export default function Rozvrh() {
       })
     : null;
   
-  const activeDayData = selectedDayData || days.find(d => d.today) || days[0];
+  const activeDayData = selectedDayData || days.find(d => d.today) || (days.length > 0 ? days[0] : null);
 
   const dayLessons = getLessonsForDay(activeDayData);
 
