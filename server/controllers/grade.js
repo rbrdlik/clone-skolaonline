@@ -177,10 +177,6 @@ exports.getAllStudentGrades = async (req, res) => {
 
     res.status(200).json(response);
 
-    const grades = await Grade.find({ student_id: studentId })
-      .populate("subject_id", "name")
-      .sort({ date: 1 });
-
     const result = {};
 
     grades.forEach(grade => {
@@ -209,15 +205,6 @@ exports.getAllStudentGrades = async (req, res) => {
         result[subjectId].weightSum += grade.weight;
       }
     });
-
-    const response = Object.values(result).map(item => ({
-      subject: item.subject,
-      average:
-        item.weightSum > 0
-          ? Number((item.weightedSum / item.weightSum).toFixed(2))
-          : null,
-      grades: item.grades
-    }));
 
     res.status(200).json(response);
 
@@ -263,6 +250,11 @@ exports.updateGrade = async (req, res) => {
         date: grade.date
       }
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.getStudentGradesBySubject = async (req, res) => {
   try {
     const { studentId, subjectId } = req.params;
@@ -302,6 +294,12 @@ exports.deleteGrade = async (req, res) => {
     }
 
     res.status(200).json({ message: "Známka smazána" });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.createGradesBulk = async (req, res) => {
   try {
     const {
