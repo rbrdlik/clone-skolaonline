@@ -179,6 +179,7 @@ $border: #e5e7eb;
   overflow: hidden;
   cursor: context-menu;
   align-items: center;
+  position: relative;
 
   strong {
     font-weight: 600;
@@ -187,6 +188,92 @@ $border: #e5e7eb;
   &.filled {
     background: #fde4d7;
     border-color: #fbc4aa;
+  }
+
+  &.cancelled {
+    background: #d1d5db !important;
+    opacity: 0.7;
+  }
+
+  &.substitution {
+    background: #fecaca !important;
+    border-color: #fca5a5 !important;
+
+    .changed-text {
+      color: #dc2626 !important;
+      font-weight: 600;
+    }
+  }
+
+  .grade-indicator {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 18px;
+    height: 18px;
+    background: #22c55e;
+    border-radius: 50%;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 11px;
+    line-height: 1;
+  }
+
+  .note-indicator {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 18px;
+    height: 18px;
+    background: #3b82f6;
+    border-radius: 50%;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 11px;
+    line-height: 1;
+    cursor: help;
+
+    &:hover::after {
+      content: attr(title);
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 5px;
+      padding: 6px 10px;
+      background: #1f2937;
+      color: white;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: normal;
+      white-space: nowrap;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      pointer-events: none;
+    }
+
+    &:hover::before {
+      content: "";
+      position: absolute;
+      top: 100%;
+      right: 8px;
+      margin-top: -1px;
+      border: 5px solid transparent;
+      border-bottom-color: #1f2937;
+      z-index: 1001;
+      pointer-events: none;
+    }
+  }
+
+  .grade-indicator + .note-indicator {
+    right: 26px;
   }
 }
 

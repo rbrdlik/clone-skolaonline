@@ -21,9 +21,9 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ username });
   if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
   const match = await bcrypt.compare(password, user.password);

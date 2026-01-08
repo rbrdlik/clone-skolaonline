@@ -6,10 +6,10 @@ const scheduleChangesSchema = new mongoose.Schema({
     changes: [
         {
             hour: {type: Number, required: true},
-            type: {type: String, enum: ["grade", "cancel", "change", "note"], required: true},
+            type: {type: String, enum: ["cancel", "change", "note", "room_change"], required: true},
             subject: {type: String, required: true},
             teacher: {type: mongoose.Schema.Types.ObjectId, ref: "User", required: true},
-            room: {type: String, required: true},
+            room: {type: String, default: ""},
             group_id: {type: mongoose.Schema.Types.ObjectId, ref: "Group", default: null},
             grade: {type: mongoose.Schema.Types.ObjectId, ref: "Grade", default: null},
             substitute_teacher: {type: mongoose.Schema.Types.ObjectId, ref: "User", default: null},

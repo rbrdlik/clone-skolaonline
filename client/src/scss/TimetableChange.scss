@@ -73,6 +73,13 @@
           appearance: none;
         }
 
+        .info-text {
+          flex: 1;
+          font-size: 0.9rem;
+          color: #333;
+          padding: 0.7rem 0;
+        }
+
         select.select-input {
           background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
           background-repeat: no-repeat;

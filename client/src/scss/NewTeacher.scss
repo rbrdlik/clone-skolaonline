@@ -96,19 +96,20 @@
         margin-top: 4rem;
         display: flex;
         justify-content: flex-end;
+        width: 100%;
 
         .btn-create {
           background-color: #4a90e2;
           color: white;
           border: none;
-          padding: 0.8rem 3.5rem;
+          padding: 0.8rem 3rem;
           border-radius: 12px;
           font-weight: 600;
           cursor: pointer;
           box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
-          transition: transform 0.1s;
+          width: 100%;
 
-          &:active { transform: scale(0.98); }
+          &:hover { opacity: 0.9; }
         }
       }
     }

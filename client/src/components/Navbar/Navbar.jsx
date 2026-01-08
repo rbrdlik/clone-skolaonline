@@ -1,10 +1,12 @@
-import { NavLink, useNavigate, Link } from "react-router-dom"; // Přidán Link
+import { NavLink, useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import "../../scss/Navbar.scss";
 import logo from "../../assets/icons/logo-notext.png";
 import signedinuser from "../../assets/icons/signedin-user.png";
 
 export default function Navbar() {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+  const { user } = useAuth(); 
 
   const handleLogout = () => {
     navigate("/signin");
@@ -51,6 +53,14 @@ export default function Navbar() {
           <NavLink to="/messages" className="nav-link">
             Odeslat zprávu
           </NavLink>
+          <NavLink to="/student-grades" className="nav-link">
+            Známky studentů
+          </NavLink>
+          {user?.role === "admin" && (
+            <NavLink to="/administrators/students" className="nav-link">
+              Pohled administrátora
+            </NavLink>
+          )}
         </nav>
       </header>
     </>

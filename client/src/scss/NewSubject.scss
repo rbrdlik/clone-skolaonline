@@ -66,6 +66,17 @@
           border-radius: 12px;
           padding: 0.8rem 1rem;
           outline: none;
+          height: 45px;
+          font-size: 0.9rem;
+        }
+
+        .select-input {
+          appearance: none;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 1rem center;
+          background-size: 1em;
+          cursor: pointer;
         }
       }
 
@@ -102,14 +113,20 @@
         margin-top: 3rem;
         display: flex;
         justify-content: flex-end;
+        width: 100%;
+
         .btn-create {
           background-color: #4a90e2;
           color: white;
           border: none;
-          padding: 0.8rem 3.5rem;
+          padding: 0.8rem 3rem;
           border-radius: 12px;
           font-weight: 600;
           cursor: pointer;
+          box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+          width: 100%;
+
+          &:hover { opacity: 0.9; }
         }
       }
     }

@@ -3,20 +3,22 @@ import CalendarPicker from "./CalendarPicker";
 import TimetableGrid from "./TimetableGrid";
 import "../../scss/Timetable.scss";
 
-export default function TimetableLayout() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+export default function TimetableLayout({ classId, selectedDate: propSelectedDate, onDateChange }) {
+  const [internalDate, setInternalDate] = useState(new Date());
+  const selectedDate = propSelectedDate || internalDate;
+  const handleDateChange = onDateChange || setInternalDate;
 
   return (
     <div className="timetable-layout">
       <aside className="left-panel">
         <CalendarPicker
           selectedDate={selectedDate}
-          onChange={setSelectedDate}
+          onChange={handleDateChange}
         />
       </aside>
 
       <section className="right-panel">
-        <TimetableGrid selectedDate={selectedDate} />
+        <TimetableGrid selectedDate={selectedDate} classId={classId} />
       </section>
     </div>
   );
