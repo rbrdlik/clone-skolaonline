@@ -5,9 +5,6 @@ const gradeToNumber = (grade) => {
   if (typeof grade === 'number') return grade;
   const gradeStr = String(grade).trim();
   
-  const hasPlus = gradeStr.includes('+');
-  const hasMinus = gradeStr.includes('-');
-  
   // Nejdřív zkontrolujeme znaménka, pak odstraníme
   const hasPlus = gradeStr.includes('+');
   const hasMinus = gradeStr.includes('-');
@@ -86,8 +83,6 @@ export const mockSubjectsWithGrades = {
       { _id: "grade-prog-4", value: "1", name: "Praktická zkouška", date: "5.12.2025", teacher: "Věra Svárovská", weight: 1.5 },
     ]
   },
-};
-
 };
 
 // Funkce pro získání předmětů s vypočítanými průměry

@@ -1,7 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, PanResponder, Image } from "react-native";
 import { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { useState, useEffect } from "react";
 import { useAuth } from "./context/AuthContext";
 import { api } from "./services/api";
 import { timetableData } from "./data/timetable";
@@ -19,13 +17,6 @@ export default function Rozvrh() {
   const [selectedDate, setSelectedDate] = useState(null);
   const swipeStartX = useRef(0);
   const swipeStartY = useRef(0);
-
-  useEffect(() => {
-    loadTimetable();
-  }, [currentWeek]);
-
-  // selectedDate se inicializuje po načtení dní
-  const [selectedDate, setSelectedDate] = useState(null);
 
   useEffect(() => {
     // #region agent log
@@ -158,9 +149,6 @@ export default function Rozvrh() {
       },
     ];
 
-      },
-    ];
-
     // Pro pondělí a středu přidáme více hodin
     if (dayOfWeek === 1 || dayOfWeek === 3) {
       baseLessons.push({
@@ -194,7 +182,6 @@ export default function Rozvrh() {
         setLessons(data.lessons || []);
         setDays(data.days || []);
       } else {
-        const weekDays = generateWeekDays(currentWeek);
         // Fallback na mock data - generujeme dny pro aktuální týden
         const weekDays = generateWeekDays(currentWeek);
         // Dynamicky generujeme hodiny pro každý den v týdnu
@@ -242,10 +229,6 @@ export default function Rozvrh() {
     }
   };
 
-  const generateWeekDays = (weekStart) => {
-    const days = [];
-    const startOfWeek = new Date(weekStart);
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
   // Generování dní pro týden
   const generateWeekDays = (weekStart) => {
     // #region agent log
@@ -276,9 +259,6 @@ export default function Rozvrh() {
         today: dateStr === todayStr,
       });
     }
-    return days;
-  };
-
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:71',message:'generateWeekDays result',data:{daysCount:days.length,firstDay:days[0]?.fullDate?.toISOString(),lastDay:days[4]?.fullDate?.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
     // #endregion
@@ -292,15 +272,6 @@ export default function Rozvrh() {
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
-  };
-
-  const changeWeek = (direction) => {
-    const newWeek = new Date(currentWeek);
-    newWeek.setDate(newWeek.getDate() + (direction * 7));
-    setCurrentWeek(newWeek);
-    const newWeekStart = new Date(newWeek);
-    newWeekStart.setDate(newWeekStart.getDate() - newWeekStart.getDay() + 1);
-    setSelectedDate(newWeekStart);
   };
 
   const handleSwipePage = (direction) => {
@@ -359,9 +330,6 @@ export default function Rozvrh() {
     },
   });
 
-  const getLessonsForDay = (day) => {
-    if (!day || !day.fullDate) return lessons;
-    const dayStr = day.fullDate.toISOString().split('T')[0];
   // Změna týdne
   const changeWeek = (direction) => {
     // #region agent log
@@ -402,8 +370,6 @@ export default function Rozvrh() {
       if (lesson.date) {
         return lesson.date === dayStr;
       }
-      return true;
-    });
       // Pokud není datum, zobrazíme všechny (pro mock data)
       return true;
     });
@@ -420,7 +386,7 @@ export default function Rozvrh() {
       })
     : null;
   
-  const activeDayData = selectedDayData || days.find(d => d.today) || days[0];
+  const activeDayData = selectedDayData || days.find(d => d.today) || (days.length > 0 ? days[0] : null);
 
   const dayLessons = getLessonsForDay(activeDayData);
 

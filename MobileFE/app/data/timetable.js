@@ -101,9 +101,6 @@ const generateLessonsForDate = (dateStr, dayOfWeek) => {
   return baseLessons;
 };
 
-const now = new Date();
-const currentWeekStart = new Date(now);
-currentWeekStart.setDate(now.getDate() - now.getDay() + 1);
 // Generování dat pro aktuální týden
 const now = new Date();
 const currentWeekStart = new Date(now);
@@ -113,7 +110,6 @@ const allLessons = [];
 for (let i = 0; i < 5; i++) {
   const date = new Date(currentWeekStart);
   date.setDate(currentWeekStart.getDate() + i);
-  const dateStr = date.toISOString().split('T')[0];
   const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
   const dayLessons = generateLessonsForDate(dateStr, date.getDay());
   allLessons.push(...dayLessons);
