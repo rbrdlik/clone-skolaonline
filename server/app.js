@@ -5,6 +5,8 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const cors = require("cors");
 
+const { swaggerDocs } = require("./swagger");
+
 require("dotenv").config();
 
 const mongoose = require("mongoose");
@@ -26,6 +28,8 @@ const scheduleChangesRouter = require("./routes/scheduleChanges");
 const messageRouter = require("./routes/message");
 
 const app = express();
+
+swaggerDocs(app);
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
