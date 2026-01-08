@@ -24,7 +24,7 @@ export default function BottomNav() {
 
   const getIndexFromPath = () => {
     const currentPath = pathname || segments.join("/") || "/";
-    if (currentPath === "/messages" || currentPath?.startsWith("/messages")) return 0;
+    if (currentPath === "/Messages" || currentPath?.startsWith("/Messages")) return 0;
     if (currentPath === "/rozvrh" || currentPath?.startsWith("/rozvrh")) return 1;
     if (currentPath === "/znamky" || currentPath?.startsWith("/znamky")) return 2;
     return 1;
@@ -54,7 +54,7 @@ export default function BottomNav() {
           ]}
         />
 
-        <NavItem href="/messages" iconName="chatbubble" />
+        <NavItem href="/Messages" iconName="chatbubble" />
         <NavItem href="/rozvrh" iconName="calendar" />
         <NavItem href="/znamky" iconName="star" />
       </View>
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   indicator: {
     position: "absolute",
     left: 0,
-    top: 10,
+    top: 1,
     height: 50,
     margin: 10,
     borderRadius: 25,
