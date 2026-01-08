@@ -1,16 +1,46 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar/Navbar";
+import { getAllClasses } from "../../models/class";
 import "../../scss/Classes.scss";
 import people from "../../assets/icons/people.png";
-import { useNavigate } from "react-router-dom";
 
 export default function Classes() {
   const navigate = useNavigate();
+  const [classes, setClasses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const classes = Array(120).fill({
-    id: 1,
-    name: "1.Ai",
-    studentCount: 27
-  });
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const classesRes = await getAllClasses();
+        if (classesRes && classesRes.status === 200) {
+          setClasses(classesRes.payload || []);
+        }
+      } catch (err) {
+        console.error("Error loading data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  const getStudentCount = (classItem) => {
+    if (!classItem.students || !Array.isArray(classItem.students)) return 0;
+    return classItem.students.length;
+  };
+
+  if (loading) {
+    return (
+      <div className="class-list-page">
+        <Navbar />
+        <main className="main-content">
+          <div style={{ textAlign: "center", padding: "2rem" }}>Načítání...</div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="class-list-page">
@@ -22,7 +52,7 @@ export default function Classes() {
             <div className="icon-wrapper">
               <img src={people} alt="" />
             </div>
-            <h1>Seznam tříd</h1>
+            <h1>Seznam tříd ({classes.length})</h1>
           </header>
 
           <div className="card-body">
@@ -34,21 +64,21 @@ export default function Classes() {
             </div>
 
             <div className="table-content">
-              {classes.map((item, index) => (
-                <div key={index} className="table-row">
-                  <div className="col-id">{item.id}</div>
-                  <div className="col-name">{item.name}</div>
-                  <div className="col-count">{item.studentCount}</div>
+              {classes.map((classItem) => (
+                <div key={classItem._id} className="table-row">
+                  <div className="col-id">{classItem._id.toString().slice(-6)}</div>
+                  <div className="col-name">{classItem.name}</div>
+                  <div className="col-count">{getStudentCount(classItem)}</div>
                   <div className="col-actions">
                     <button 
                       className="btn-action primary" 
-                      onClick={() => navigate("/students")}
+                      onClick={() => navigate(`/students/${classItem._id}`)}
                     >
                       Seznam studentů
                     </button>
                     <button 
                       className="btn-action secondary" 
-                      onClick={() => navigate("/timetable")}
+                      onClick={() => navigate(`/timetable/${classItem._id}`)}
                     >
                       Rozvrh
                     </button>

@@ -62,6 +62,7 @@ export default function BottomNav() {
   );
 }
 
+function NavItem({ href, iconName, index }) {
 function NavItem({ href, iconName }) {
   const pathname = usePathname();
   const segments = useSegments();
@@ -76,6 +77,13 @@ function NavItem({ href, iconName }) {
         style={styles.navItem}
         activeOpacity={0.7}
       >
+        <View style={styles.iconContainer}>
+          <Ionicons 
+            name={iconName} 
+            size={24} 
+            color={isActive ? "#ffffff" : "#000000"} 
+          />
+        </View>
         <Ionicons 
           name={iconName} 
           size={24} 

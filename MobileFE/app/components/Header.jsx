@@ -121,6 +121,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#000",
     flex: 1,
+    textAlign: "left",
+    marginLeft: 0,
+    paddingLeft: 0,
     textAlign: "center",
   },
   profileButton: {

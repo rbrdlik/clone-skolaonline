@@ -32,6 +32,15 @@ const applyScheduleChanges = (lessons, changes) => {
       }
     }
 
+    if (change.type === "room_change") {
+      if (index !== -1) {
+        result[index] = {
+          ...result[index],
+          room: change.room
+        };
+      }
+    }
+
     if (change.type === "note" && index !== -1) {
       result[index].note = change.note;
     }
@@ -123,7 +132,7 @@ exports.getTeacherScheduleForDay = async (req, res) => {
 
 exports.getClassScheduleForDay = async (req, res) => {
   try {
-    const { classId, date } = req.query;
+    const { classId, date, includeCancelled } = req.query;
 
     const dayOfWeek = getDayOfWeek(date);
     if (!dayOfWeek) return res.status(400).json({ message: "Neplatný den" });
@@ -141,7 +150,7 @@ exports.getClassScheduleForDay = async (req, res) => {
       date: new Date(date)
     });
 
-    if (changes) {
+    if (changes && includeCancelled !== "true") {
       lessons = applyScheduleChanges(lessons, changes.changes);
     }
 
@@ -156,11 +165,18 @@ exports.createSchedule = async (req, res) => {
   try {
     const { class_id, dayOfWeek, lessons } = req.body;
 
-    const schedule = await Schedule.create({
-      class_id,
-      dayOfWeek,
-      lessons
-    });
+    const schedule = await Schedule.findOneAndUpdate(
+      { class_id, dayOfWeek },
+      {
+        class_id,
+        dayOfWeek,
+        lessons
+      },
+      {
+        new: true,
+        upsert: true
+      }
+    );
 
     res.status(201).json(schedule);
 
@@ -288,3 +304,4 @@ exports.getStudentLessonDetail = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+

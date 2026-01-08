@@ -1,0 +1,216 @@
+@use "./variables";
+@use "./fonts";
+@use "./main-style.scss" as main;
+
+.student-grades-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7f9;
+  overflow: hidden;
+
+  .main-content {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow: hidden;
+  }
+
+  .grades-card {
+    background: white;
+    width: 100%;
+    max-width: 1800px;
+    height: 100%;
+    border-radius: 20px;
+    border: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+
+    .card-header {
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #eee;
+
+      img {
+        height: 40px;
+      }
+
+      h1 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+      }
+    }
+
+    .card-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 2rem;
+      overflow: hidden;
+
+      .student-select-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-shrink: 0;
+
+        label {
+          font-weight: 600;
+          font-size: 0.95rem;
+          min-width: 150px;
+        }
+
+        .select-input {
+          flex: 1;
+          max-width: 400px;
+        }
+      }
+
+      .message {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        flex-shrink: 0;
+
+        &.success {
+          background: #d4edda;
+          color: #155724;
+        }
+
+        &.error {
+          background: #f8d7da;
+          color: #721c24;
+        }
+      }
+
+      .grades-table {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+
+        .table-header {
+          display: flex;
+          padding-bottom: 1rem;
+          font-weight: 700;
+          color: #333;
+          font-size: 0.95rem;
+          border-bottom: 2px solid #eee;
+          flex-shrink: 0;
+
+          .col-date { flex: 0 0 120px; }
+          .col-subject { flex: 0 0 150px; }
+          .col-teacher { flex: 1; }
+          .col-grade { flex: 0 0 80px; text-align: center; }
+          .col-weight { flex: 0 0 80px; text-align: center; }
+          .col-description { flex: 1; }
+          .col-actions { flex: 0 0 200px; text-align: center; }
+        }
+
+        .table-content {
+          flex: 1;
+          overflow-y: auto;
+          padding-right: 8px;
+
+          &::-webkit-scrollbar { width: 6px; }
+          &::-webkit-scrollbar-thumb { background: variables.$main-blue; border-radius: 10px; }
+
+          .table-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            font-weight: 500;
+            color: #444;
+            border-bottom: 1px solid #f0f0f0;
+
+            &:hover {
+              background-color: #f9fbff;
+            }
+
+            .col-date { flex: 0 0 120px; }
+            .col-subject { flex: 0 0 150px; font-weight: 600; }
+            .col-teacher { flex: 1; }
+            .col-grade { flex: 0 0 80px; text-align: center; font-weight: 600; }
+            .col-weight { flex: 0 0 80px; text-align: center; }
+            .col-description { flex: 1; color: #666; }
+            .col-actions { 
+              flex: 0 0 200px; 
+              display: flex;
+              gap: 8px;
+              justify-content: center;
+            }
+
+            .select-input.small,
+            .text-input.small {
+              padding: 0.4rem 0.6rem;
+              font-size: 0.85rem;
+              width: 100%;
+            }
+
+            .btn-action {
+              padding: 6px 12px;
+              border-radius: 6px;
+              border: none;
+              font-weight: 600;
+              font-size: 0.85rem;
+              cursor: pointer;
+              transition: all 0.2s;
+
+              &.edit {
+                background: variables.$main-blue;
+                color: white;
+
+                &:hover {
+                  background: variables.$hover-blue;
+                }
+              }
+
+              &.save {
+                background: #22c55e;
+                color: white;
+
+                &:hover {
+                  background: #16a34a;
+                }
+              }
+
+              &.cancel {
+                background: #6b7280;
+                color: white;
+
+                &:hover {
+                  background: #4b5563;
+                }
+              }
+
+              &.delete {
+                background: #ef4444;
+                color: white;
+
+                &:hover {
+                  background: #dc2626;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.select-input, .text-input {
+  background-color: #ececec;
+  border: none;
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  outline: none;
+  font-size: 0.9rem;
+}

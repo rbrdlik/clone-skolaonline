@@ -182,6 +182,7 @@ export default function Rozvrh() {
         setLessons(data.lessons || []);
         setDays(data.days || []);
       } else {
+        const weekDays = generateWeekDays(currentWeek);
         // Fallback na mock data - generujeme dny pro aktuální týden
         const weekDays = generateWeekDays(currentWeek);
         // Dynamicky generujeme hodiny pro každý den v týdnu
@@ -229,6 +230,10 @@ export default function Rozvrh() {
     }
   };
 
+  const generateWeekDays = (weekStart) => {
+    const days = [];
+    const startOfWeek = new Date(weekStart);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
   // Generování dní pro týden
   const generateWeekDays = (weekStart) => {
     // #region agent log
@@ -259,6 +264,9 @@ export default function Rozvrh() {
         today: dateStr === todayStr,
       });
     }
+    return days;
+  };
+
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:71',message:'generateWeekDays result',data:{daysCount:days.length,firstDay:days[0]?.fullDate?.toISOString(),lastDay:days[4]?.fullDate?.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
     // #endregion
@@ -370,6 +378,8 @@ export default function Rozvrh() {
       if (lesson.date) {
         return lesson.date === dayStr;
       }
+      return true;
+    });
       // Pokud není datum, zobrazíme všechny (pro mock data)
       return true;
     });

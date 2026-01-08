@@ -52,7 +52,7 @@
       .form-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr); 
-        gap: 20px;
+        gap: 2rem 1.5rem;
       }
 
       .form-group {
@@ -78,21 +78,23 @@
       }
 
       .form-footer {
-        margin-top: 50px;
+        margin-top: 4rem;
         display: flex;
         justify-content: flex-end;
+        width: 100%;
 
         .btn-save {
           background-color: #4a90e2;
           color: white;
           border: none;
-          padding: 12px 50px;
-          border-radius: 10px;
+          padding: 0.8rem 3rem;
+          border-radius: 12px;
           font-weight: 600;
           cursor: pointer;
-          transition: background 0.2s;
+          box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+          width: 100%;
 
-          &:hover { background-color: #357abd; }
+          &:hover { opacity: 0.9; }
         }
       }
     }

@@ -16,7 +16,7 @@ exports.createScheduleChange = async (req, res) => {
       note = null
     } = req.body;
 
-    if (!class_id || !date || !hour || !type || !subject || !teacher || !room) {
+    if (!class_id || !date || hour === undefined || hour === null || !type || !subject || !teacher) {
       return res.status(400).json({ message: "Chybí povinná data" });
     }
 
@@ -25,7 +25,7 @@ exports.createScheduleChange = async (req, res) => {
       type,
       subject,
       teacher,
-      room,
+      room: room || "",
       group_id,
       grade,
       substitute_teacher,
@@ -114,6 +114,41 @@ exports.deleteScheduleChangeDay = async (req, res) => {
     });
 
     res.status(204).send();
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getScheduleChangesByClassAndDate = async (req, res) => {
+  try {
+    const { classId, date } = req.query;
+
+    if (!classId || !date) {
+      return res.status(400).json({ message: "Chybí classId nebo date" });
+    }
+
+    const dateObj = new Date(date);
+    dateObj.setHours(0, 0, 0, 0);
+    const startOfDay = new Date(dateObj);
+    dateObj.setHours(23, 59, 59, 999);
+    const endOfDay = new Date(dateObj);
+
+    const scheduleChange = await ScheduleChanges.findOne({
+      class_id: classId,
+      date: {
+        $gte: startOfDay,
+        $lte: endOfDay
+      }
+    })
+      .populate("changes.teacher", "first_name last_name")
+      .populate("changes.substitute_teacher", "first_name last_name");
+
+    if (!scheduleChange) {
+      return res.status(200).json({ changes: [] });
+    }
+
+    res.status(200).json({ changes: scheduleChange.changes });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
