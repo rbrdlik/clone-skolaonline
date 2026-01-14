@@ -1,16 +1,58 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState, useEffect } from "react";
 import Header from "./components/Header";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "./context/AuthContext";
+import { api } from "./services/api";
 import { mockSubjectsWithGrades } from "./data/grades";
 
 export default function SubjectDetail() {
-  const { subjectId } = useLocalSearchParams();
+  const { subjectId, subjectName: paramSubjectName } = useLocalSearchParams();
   const router = useRouter();
+  const { user } = useAuth();
+  const [grades, setGrades] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [subjectName, setSubjectName] = useState(paramSubjectName || "Neznámý předmět");
   
-  const subjectData = mockSubjectsWithGrades[subjectId] || mockSubjectsWithGrades["cj-1"];
-  const subjectName = subjectData.subject;
-  const grades = subjectData.grades || [];
+  useEffect(() => {
+    loadGrades();
+  }, [subjectId, user?._id]);
+
+  const loadGrades = async () => {
+    setLoading(true);
+    try {
+      if (user?._id && subjectId) {
+        const data = await api.getGradesBySubject(user._id, subjectId);
+        // Backend vrací pole: { _id, value, weight, description, subject, teacher, date }
+        const transformed = data.map((grade) => ({
+          _id: grade._id || `grade-${grade.date}`,
+          value: grade.value,
+          name: grade.description || "Známka",
+          teacher: grade.teacher || "Neznámý učitel",
+          date: new Date(grade.date).toLocaleDateString('cs-CZ'),
+          weight: grade.weight,
+        }));
+        setGrades(transformed);
+        if (data.length > 0) {
+          setSubjectName(data[0].subject || paramSubjectName || "Neznámý předmět");
+        }
+      } else {
+        // Fallback na mock data
+        const subjectData = mockSubjectsWithGrades[subjectId] || mockSubjectsWithGrades["cj-1"];
+        setSubjectName(subjectData.subject);
+        setGrades(subjectData.grades || []);
+      }
+    } catch (error) {
+      console.error("Error loading grades:", error);
+      // Fallback na mock data
+      const subjectData = mockSubjectsWithGrades[subjectId] || mockSubjectsWithGrades["cj-1"];
+      setSubjectName(subjectData.subject);
+      setGrades(subjectData.grades || []);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGradePress = (gradeId) => {
     router.push({

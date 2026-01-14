@@ -157,6 +157,28 @@ router.post("/bulk", gradeCtrl.createGradesBulk);
 /**
  * @openapi
  * /grades/{id}:
+ *   get:
+ *     summary: Získání známky podle ID
+ *     tags:
+ *       - Grades
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Známka nalezena
+ *       404:
+ *         description: Známka nenalezena
+ */
+router.get("/:id", auth, gradeCtrl.getGradeById);
+/**
+ * @openapi
+ * /grades/{id}:
  *   put:
  *     summary: Úprava známky
  *     tags:

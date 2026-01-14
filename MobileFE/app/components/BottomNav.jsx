@@ -24,7 +24,7 @@ export default function BottomNav() {
 
   const getIndexFromPath = () => {
     const currentPath = pathname || segments.join("/") || "/";
-    if (currentPath === "/Messages" || currentPath?.startsWith("/Messages")) return 0;
+    if (currentPath === "/messages" || currentPath === "/Messages" || currentPath?.startsWith("/messages") || currentPath?.startsWith("/Messages")) return 0;
     if (currentPath === "/rozvrh" || currentPath?.startsWith("/rozvrh")) return 1;
     if (currentPath === "/znamky" || currentPath?.startsWith("/znamky")) return 2;
     return 1;
@@ -54,7 +54,7 @@ export default function BottomNav() {
           ]}
         />
 
-        <NavItem href="/Messages" iconName="chatbubble" />
+        <NavItem href="/messages" iconName="chatbubble" />
         <NavItem href="/rozvrh" iconName="calendar" />
         <NavItem href="/znamky" iconName="star" />
       </View>
@@ -62,7 +62,6 @@ export default function BottomNav() {
   );
 }
 
-function NavItem({ href, iconName, index }) {
 function NavItem({ href, iconName }) {
   const pathname = usePathname();
   const segments = useSegments();
@@ -84,11 +83,6 @@ function NavItem({ href, iconName }) {
             color={isActive ? "#ffffff" : "#000000"} 
           />
         </View>
-        <Ionicons 
-          name={iconName} 
-          size={24} 
-          color={isActive ? "#ffffff" : "#000000"} 
-        />
       </TouchableOpacity>
     </Link>
   );

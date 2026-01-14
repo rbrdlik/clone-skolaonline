@@ -132,7 +132,7 @@ exports.getTeacherScheduleForDay = async (req, res) => {
 
 exports.getClassScheduleForDay = async (req, res) => {
   try {
-    const { classId, date, includeCancelled } = req.query;
+    const { classId, date } = req.query;
 
     const dayOfWeek = getDayOfWeek(date);
     if (!dayOfWeek) return res.status(400).json({ message: "Neplatný den" });
@@ -150,7 +150,7 @@ exports.getClassScheduleForDay = async (req, res) => {
       date: new Date(date)
     });
 
-    if (changes && includeCancelled !== "true") {
+    if (changes) {
       lessons = applyScheduleChanges(lessons, changes.changes);
     }
 
@@ -304,4 +304,3 @@ exports.getStudentLessonDetail = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-

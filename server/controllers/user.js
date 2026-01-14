@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const Class = require("../models/class");
+const bcrypt = require("bcryptjs");
 
 exports.getAllUsers = async (req, res) => {
   try {
@@ -27,7 +28,18 @@ exports.getUserById = async (req, res) => {
 
 exports.createUser = async (req, res) => {
   try {
-    const data = new User(req.body);
+    const { password, ...rest } = req.body;
+    
+    // Hashování hesla před uložením
+    let hashedPassword = password;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
+    
+    const data = new User({
+      ...rest,
+      password: hashedPassword,
+    });
     const result = await data.save();
     if (result)
       return res.status(201).send({ message: "User created", payload: result });
@@ -39,7 +51,15 @@ exports.createUser = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const result = await User.findByIdAndUpdate(req.params.id, req.body, {
+    const { password, ...rest } = req.body;
+    
+    // Pokud je v requestu heslo, hashujeme ho před uložením
+    let updateData = { ...rest };
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+    
+    const result = await User.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
     });
     if (result)

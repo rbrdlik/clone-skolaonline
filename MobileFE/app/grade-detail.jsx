@@ -1,8 +1,10 @@
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import { useState, useEffect } from "react";
 import Header from "./components/Header";
+import { api } from "./services/api";
 
-// Mock data - v reálné aplikaci by se načítalo z API
+// Mock data - fallback
 const mockGradeData = {
   _id: "grade-1",
   subject: "Český jazyk a literatura",
@@ -11,14 +13,53 @@ const mockGradeData = {
   date: "12.12.2025",
   type: "Známka",
   weight: 0.0,
-  verbalEvaluation: "Lorem ipsum den fores les",
+  description: "",
 };
 
 export default function GradeDetail() {
   const { gradeId, subjectName } = useLocalSearchParams();
+  const [grade, setGrade] = useState(mockGradeData);
+  const [loading, setLoading] = useState(true);
   
-  // V reálné aplikaci by se načítalo z API podle gradeId
-  const grade = mockGradeData;
+  useEffect(() => {
+    loadGrade();
+  }, [gradeId]);
+
+  const loadGrade = async () => {
+    setLoading(true);
+    try {
+      if (gradeId) {
+        const data = await api.getGradeById(gradeId);
+        // Backend vrací: { _id, value, weight, description, subject, subjectShort, teacher, class, date }
+        const date = new Date(data.date);
+        setGrade({
+          _id: data._id,
+          subject: data.subject || subjectName || "Neznámý předmět",
+          name: data.description || "Známka",
+          value: data.value,
+          date: date.toLocaleDateString('cs-CZ'),
+          type: "Známka",
+          weight: data.weight || 0,
+          description: data.description || "",
+          teacher: data.teacher || "",
+        });
+      }
+    } catch (error) {
+      console.error("Error loading grade:", error);
+      // Použijeme mock data při chybě
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#4C8DEF" />
+      </View>
+    );
+  }
+
   const displaySubject = subjectName || grade.subject;
 
   return (
@@ -39,17 +80,20 @@ export default function GradeDetail() {
           <DetailRow label="Datum hodnocení" value={grade.date} />
           <DetailRow label="Druh hodnocení" value={grade.type} />
           <DetailRow label="Váha" value={grade.weight.toString()} />
+          {grade.teacher && <DetailRow label="Učitel" value={grade.teacher} />}
         </View>
 
-        {/* Verbal evaluation */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Slovní hodnocení</Text>
-          <View style={styles.verbalEvaluationBox}>
-            <Text style={styles.verbalEvaluationText}>
-              {grade.verbalEvaluation || "-"}
-            </Text>
+        {/* Description */}
+        {grade.description && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Popis</Text>
+            <View style={styles.verbalEvaluationBox}>
+              <Text style={styles.verbalEvaluationText}>
+                {grade.description}
+              </Text>
+            </View>
           </View>
-        </View>
+        )}
       </ScrollView>
     </View>
   );

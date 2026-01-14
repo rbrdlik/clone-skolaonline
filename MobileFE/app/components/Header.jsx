@@ -25,6 +25,12 @@ export default function Header({ title, showBack = false, showProfile = false })
     if (user?.name) {
       return user.name.charAt(0).toUpperCase();
     }
+    if (user?.first_name) {
+      return user.first_name.charAt(0).toUpperCase();
+    }
+    if (user?.username) {
+      return user.username.charAt(0).toUpperCase();
+    }
     return "?";
   };
 
@@ -66,10 +72,17 @@ export default function Header({ title, showBack = false, showProfile = false })
                     <Text style={styles.modalProfileText}>{getInitials()}</Text>
                   </View>
                   <Text style={styles.modalUserName}>
-                    {user?.name || user?.username || "Uživatel"}
+                    {user?.name || (user?.first_name && user?.last_name 
+                      ? `${user.first_name} ${user.last_name}`
+                      : user?.username) || "Uživatel"}
                   </Text>
                   {user?.class && (
                     <Text style={styles.modalUserClass}>{user.class}</Text>
+                  )}
+                  {user?.role && (
+                    <Text style={styles.modalUserClass}>
+                      {user.role === 'student' ? 'Student' : user.role === 'učitel' ? 'Učitel' : user.role}
+                    </Text>
                   )}
                 </View>
                 
@@ -121,7 +134,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#000",
     flex: 1,
-    textAlign: "left",
     marginLeft: 0,
     paddingLeft: 0,
     textAlign: "center",

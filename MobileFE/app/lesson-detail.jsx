@@ -1,10 +1,12 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState, useEffect } from "react";
 import Header from "./components/Header";
-import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "./context/AuthContext";
+import { api } from "./services/api";
 import { getLessonDetail } from "./data/lessons";
 
-// Mock data - v reálné aplikaci by se načítalo z API
+// Mock data - fallback
 const mockLessonData = {
   _id: "a1",
   subject: "Český jazyk a literatura",
@@ -20,22 +22,86 @@ const mockLessonData = {
     value: "1-",
     weight: 0.0,
   },
-  homework: {
-    task: "Přepsat zápis",
-    dueDate: "12.12.2025 16:00",
-  },
-  lessonInfo: "-",
-  coveredMaterial: "-",
+  scheduleChangeType: "normal",
+  scheduleChangeNote: null,
 };
 
 export default function LessonDetail() {
-  const { lessonId } = useLocalSearchParams();
+  const { lessonId, date, hour } = useLocalSearchParams();
   const router = useRouter();
+  const { user } = useAuth();
+  const [lesson, setLesson] = useState(mockLessonData);
+  const [loading, setLoading] = useState(true);
   
-  const lesson = getLessonDetail(lessonId || "default");
-  // V reálné aplikaci by se načítalo z API podle lessonId
-  // const lesson = getLessonDetail(lessonId || "default");
-  const lesson = mockLessonData;
+  useEffect(() => {
+    loadLesson();
+  }, [lessonId, date, hour, user?._id]);
+
+  const loadLesson = async () => {
+    setLoading(true);
+    try {
+      // Pokud máme date a hour z parametrů, použijeme API
+      if (user?._id && date && hour) {
+        const data = await api.getLessonDetail(user._id, date, hour);
+        // Backend vrací: { date, hour, subject, teacher: { first_name, last_name }, class, group, room, type, grade, note }
+        const dayNames = ["Ne", "Po", "Út", "St", "Čt", "Pá", "So"];
+        const lessonDate = new Date(data.date);
+        const formattedDate = `${dayNames[lessonDate.getDay()]} ${lessonDate.getDate()}.${lessonDate.getMonth() + 1}.`;
+        
+        const times = {
+          1: "7:55 - 8:40",
+          2: "8:45 - 9:30",
+          3: "9:40 - 10:25",
+          4: "10:30 - 11:15",
+          5: "11:25 - 12:10",
+          6: "12:20 - 13:05",
+          7: "13:15 - 14:00",
+          8: "14:00 - 14:45",
+          9: "14:55 - 15:40",
+        };
+        
+        setLesson({
+          _id: lessonId || `lesson-${date}-${hour}`,
+          subject: data.subject,
+          teacher: data.teacher ? `${data.teacher.first_name} ${data.teacher.last_name}` : "Neznámý učitel",
+          class: data.class || "",
+          group: data.group || "",
+          classroom: data.room || "",
+          date: formattedDate,
+          lessonNumber: data.hour,
+          time: times[data.hour] || "7:55 - 8:40",
+          grade: data.grade ? {
+            name: data.grade.description || "Známka",
+            value: data.grade.value === 0 ? "NH" : data.grade.value.toString(),
+            weight: data.grade.weight || 0,
+          } : null,
+          scheduleChangeType: data.type || "normal", // Typ změny: normal, cancel, change, room_change, note
+          scheduleChangeNote: data.note || null, // Poznámka ze schedule change
+        });
+      } else if (lessonId) {
+        // Fallback na mock data pomocí lessonId
+        const mockLesson = getLessonDetail(lessonId);
+        setLesson(mockLesson);
+      }
+    } catch (error) {
+      console.error("Error loading lesson:", error);
+      // Fallback na mock data
+      if (lessonId) {
+        const mockLesson = getLessonDetail(lessonId);
+        setLesson(mockLesson);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#4C8DEF" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -59,44 +125,56 @@ export default function LessonDetail() {
           <InfoRow label="Učebna" value={lesson.classroom} />
         </View>
 
-        {/* Hodnocení */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hodnocení</Text>
-          
-          <View style={styles.gradeCard}>
-            <View style={styles.gradeBox}>
-              <Text style={styles.gradeValue}>{lesson.grade.value}</Text>
-            </View>
-            <View style={styles.gradeInfo}>
-              <Text style={styles.gradeName}>{lesson.grade.name}</Text>
-              <Text style={styles.gradeWeight}>Váha: {lesson.grade.weight}</Text>
+        {/* Změna rozvrhu */}
+        {(lesson.scheduleChangeType && lesson.scheduleChangeType !== "normal") || lesson.scheduleChangeNote ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Změna rozvrhu</Text>
+            
+            <View style={styles.changeCard}>
+              {lesson.scheduleChangeType === "cancel" && (
+                <View style={styles.changeBadge}>
+                  <Text style={styles.changeBadgeText}>Hodina odpadla</Text>
+                </View>
+              )}
+              {lesson.scheduleChangeType === "change" && (
+                <View style={[styles.changeBadge, styles.changeBadgeSubstitution]}>
+                  <Text style={styles.changeBadgeText}>Suplování</Text>
+                </View>
+              )}
+              {lesson.scheduleChangeType === "room_change" && (
+                <View style={[styles.changeBadge, styles.changeBadgeRoom]}>
+                  <Text style={styles.changeBadgeText}>Změna učebny</Text>
+                </View>
+              )}
+              {(lesson.scheduleChangeType === "note" || lesson.scheduleChangeNote) && (
+                <View style={[styles.changeBadge, styles.changeBadgeNote]}>
+                  <Text style={styles.changeBadgeText}>Poznámka</Text>
+                </View>
+              )}
+              
+              {lesson.scheduleChangeNote && (
+                <Text style={styles.changeNote}>{lesson.scheduleChangeNote}</Text>
+              )}
             </View>
           </View>
-        </View>
+        ) : null}
 
-        {/* Domácí úkoly */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Domácí úkoly</Text>
-          
-          <View style={styles.homeworkCard}>
-            <Text style={styles.homeworkTask}>Úkol: {lesson.homework.task}</Text>
-            <Text style={styles.homeworkDate}>
-              Datum odevzdání: {lesson.homework.dueDate}
-            </Text>
+        {/* Hodnocení - zobrazí se pouze pokud bylo skutečně zadáno hodnocení */}
+        {lesson.grade && lesson.grade.value !== undefined && lesson.grade.value !== null ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Hodnocení</Text>
+            
+            <View style={styles.gradeCard}>
+              <View style={styles.gradeBox}>
+                <Text style={styles.gradeValue}>{lesson.grade.value}</Text>
+              </View>
+              <View style={styles.gradeInfo}>
+                <Text style={styles.gradeName}>{lesson.grade.name}</Text>
+                <Text style={styles.gradeWeight}>Váha: {lesson.grade.weight}</Text>
+              </View>
+            </View>
           </View>
-        </View>
-
-        {/* Informace k výuce */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Informace k výuce</Text>
-          <Text style={styles.emptyText}>{lesson.lessonInfo}</Text>
-        </View>
-
-        {/* Probrané učivo */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Probrané učivo</Text>
-          <Text style={styles.emptyText}>{lesson.coveredMaterial}</Text>
-        </View>
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -192,20 +270,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
   },
-  homeworkCard: {
+  changeCard: {
     backgroundColor: "#F9F9F9",
     borderRadius: 12,
     padding: 15,
   },
-  homeworkTask: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#000",
-    marginBottom: 8,
+  changeBadge: {
+    backgroundColor: "#FFE5E5",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    alignSelf: "flex-start",
+    marginBottom: 12,
   },
-  homeworkDate: {
+  changeBadgeSubstitution: {
+    backgroundColor: "#FFF4E5",
+  },
+  changeBadgeRoom: {
+    backgroundColor: "#E5F5E5",
+  },
+  changeBadgeNote: {
+    backgroundColor: "#E5F0FF",
+  },
+  changeBadgeText: {
     fontSize: 14,
-    color: "#666",
+    fontWeight: "600",
+    color: "#333",
+  },
+  changeNote: {
+    fontSize: 15,
+    color: "#000",
+    lineHeight: 22,
   },
   emptyText: {
     fontSize: 15,

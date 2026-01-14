@@ -32,14 +32,52 @@ export default function Znamky() {
 
   useEffect(() => {
     loadGrades();
-  }, [selectedSemester]);
+  }, [selectedSemester, user?._id]);
+
+  // Transformace dat z backendu
+  const transformBackendGrades = async (backendData) => {
+    // Backend vrací pole objektů: { subject, average, grades }
+    // Musíme najít subjectId podle názvu předmětu
+    try {
+      const allSubjects = await api.getAllSubjects();
+      const subjectMap = {};
+      allSubjects.forEach(subject => {
+        subjectMap[subject.name] = subject._id || subject.id;
+      });
+      
+      return backendData.map((item, index) => ({
+        subjectId: subjectMap[item.subject] || `subject-${index}`,
+        subject: item.subject,
+        average: item.average || 0,
+        gradeCount: item.grades?.length || 0,
+        grades: item.grades || [],
+      }));
+    } catch (error) {
+      console.error('Error loading subjects:', error);
+      // Fallback - použijeme mock data pro mapování
+      const mockSubjects = getSubjectsWithAverages();
+      return backendData.map((item, index) => {
+        const mockSubject = mockSubjects.find(s => s.subject === item.subject);
+        return {
+          subjectId: mockSubject?.subjectId || `subject-${index}`,
+          subject: item.subject,
+          average: item.average || 0,
+          gradeCount: item.grades?.length || 0,
+          grades: item.grades || [],
+        };
+      });
+    }
+  };
 
   const loadGrades = async () => {
     setLoading(true);
     try {
-      if (user?.studentId) {
-        const data = await api.getGrades(user.studentId, selectedSemester);
-        setSubjects(data.subjects || []);
+      if (user?._id) {
+        const studentId = user._id;
+        const data = await api.getGradesSummary(studentId);
+        // Backend vrací pole objektů s subject, average, grades
+        const transformed = await transformBackendGrades(data);
+        setSubjects(transformed);
       } else {
         const subjectsWithAverages = getSubjectsWithAverages();
         setSubjects(subjectsWithAverages);
@@ -53,10 +91,10 @@ export default function Znamky() {
     }
   };
 
-  const handleSubjectPress = (subjectId) => {
+  const handleSubjectPress = (subjectId, subjectName) => {
     router.push({
       pathname: "/subject-detail",
-      params: { subjectId }
+      params: { subjectId, subjectName }
     });
   };
 
@@ -108,7 +146,7 @@ export default function Znamky() {
               average={subject.average}
               gradeCount={subject.gradeCount}
               color={getAverageColor(subject.average)}
-              onPress={() => handleSubjectPress(subject.subjectId)}
+              onPress={() => handleSubjectPress(subject.subjectId, subject.subject)}
             />
           ))}
         </View>

@@ -68,6 +68,7 @@ exports.getStudentGradesBySubject = async (req, res) => {
       .sort({ date: -1 });
 
     const response = grades.map(g => ({
+      _id: g._id,
       value: g.value === 0 ? "NH" : g.value,
       weight: g.weight,
       description: g.description,
@@ -213,6 +214,35 @@ exports.getAllStudentGrades = async (req, res) => {
   }
 };
 
+exports.getGradeById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const grade = await Grade.findById(id)
+      .populate("subject_id", "name short_name")
+      .populate("teacher_id", "first_name last_name")
+      .populate("class_id", "name");
+
+    if (!grade) {
+      return res.status(404).json({ message: "Známka nenalezena" });
+    }
+
+    res.status(200).json({
+      _id: grade._id,
+      value: grade.value === 0 ? "NH" : grade.value,
+      weight: grade.weight,
+      description: grade.description || "",
+      subject: grade.subject_id.name,
+      subjectShort: grade.subject_id.short_name,
+      teacher: `${grade.teacher_id.first_name} ${grade.teacher_id.last_name}`,
+      class: grade.class_id.name,
+      date: grade.date
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.updateGrade = async (req, res) => {
   try {
     const { id } = req.params;
@@ -268,6 +298,7 @@ exports.getStudentGradesBySubject = async (req, res) => {
       .sort({ date: -1 });
 
     const response = grades.map(g => ({
+      _id: g._id,
       value: g.value === 0 ? "NH" : g.value,
       weight: g.weight,
       description: g.description,

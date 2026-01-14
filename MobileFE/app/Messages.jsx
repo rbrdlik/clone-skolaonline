@@ -47,21 +47,85 @@ export default function Messages() {
   const swipeStartXRef = useRef(0);
   const swipeStartYRef = useRef(0);
 
+  // Transformace zpráv z backendu
+  const transformBackendMessages = useCallback((backendData) => {
+    const messages = [];
+    
+    // Backend vrací objekt s klíči jako "january2026" a hodnotami jako pole zpráv
+    // Nebo může být prázdný objekt nebo null
+    if (!backendData || typeof backendData !== 'object') {
+      return [];
+    }
+    
+    Object.keys(backendData).forEach(monthKey => {
+      const monthMessages = backendData[monthKey];
+      if (Array.isArray(monthMessages)) {
+        monthMessages.forEach(msg => {
+          if (!msg || !msg.id) return; // Přeskočit neplatné zprávy
+          
+          try {
+            const date = new Date(msg.created_at);
+            if (isNaN(date.getTime())) return; // Přeskočit neplatné datum
+            
+            const monthNames = ["Leden", "Únor", "Březen", "Duben", "Květen", "Červen",
+              "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"];
+            const month = monthNames[date.getMonth()] + " " + date.getFullYear();
+            
+            messages.push({
+              _id: msg.id.toString(),
+              sender: msg.author ? `${msg.author.first_name || ''} ${msg.author.last_name || ''}`.trim() : 'Neznámý odesílatel',
+              subject: msg.title || 'Bez předmětu',
+              preview: msg.description || msg.content?.substring(0, 50) || '',
+              date: date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' }),
+              month: month,
+              read: false, // Backend to nesleduje, použijeme AsyncStorage
+            });
+          } catch (error) {
+            console.error("Error transforming message:", error, msg);
+          }
+        });
+      }
+    });
+    
+    // Seřadit podle data (nejnovější první)
+    return messages.sort((a, b) => {
+      try {
+        const dateA = new Date(a.date.split('.').reverse().join('-'));
+        const dateB = new Date(b.date.split('.').reverse().join('-'));
+        return dateB - dateA;
+      } catch {
+        return 0;
+      }
+    });
+  }, []);
+
   const loadMessages = useCallback(async () => {
     setLoading(true);
     let loadedMessages = [];
     
     try {
-      const studentId = user?.studentId;
+      const studentId = user?._id;
       if (studentId) {
         const data = await api.getMessages(studentId);
-        loadedMessages = data.messages || [];
+        // Backend vrací objekt seskupený podle měsíců, musíme to transformovat
+        if (data && typeof data === 'object') {
+          loadedMessages = transformBackendMessages(data);
+        } else {
+          console.warn("Unexpected data format from API:", data);
+          loadedMessages = [];
+        }
       } else {
+        console.warn("No user ID, using mock data");
         loadedMessages = [...mockMessagesData];
       }
     } catch (error) {
       console.error("Error loading messages:", error);
-      loadedMessages = [...mockMessagesData];
+      // Použijeme mock data pouze pokud není user (pro testování)
+      if (!user?._id) {
+        loadedMessages = [...mockMessagesData];
+      } else {
+        loadedMessages = [];
+      }
     }
     
     try {
@@ -76,11 +140,14 @@ export default function Messages() {
     
     setMessages(loadedMessages);
     setLoading(false);
-  }, [user?.studentId]);
+  }, [user?._id, transformBackendMessages]);
 
+  // Načíst zprávy při změně uživatele nebo filtru
   useEffect(() => {
-    loadMessages();
-  }, [filter, loadMessages]);
+    if (user?._id) {
+      loadMessages();
+    }
+  }, [user?._id, filter, loadMessages]);
 
   const handleMessagePress = async (messageId) => {
     await markMessageAsRead(messageId);
@@ -92,9 +159,7 @@ export default function Messages() {
 
   const markMessageAsRead = async (messageId) => {
     try {
-      if (user?.studentId) {
-        await api.markMessageAsRead(user.studentId, messageId);
-      }
+      // Backend nemá endpoint pro označení jako přečtené, použijeme pouze AsyncStorage
       
       setMessages(prevMessages => 
         prevMessages.map(msg => 
@@ -178,49 +243,59 @@ export default function Messages() {
     return acc;
   }, {});
 
-  const panHandlers = swipePanResponderRef.current.panHandlers;
-
   return (
     <View style={styles.container}>
       <Header title="Zprávy" />
       
-      <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
-        {/* Filter buttons */}
-        <View style={styles.filterContainer}>
-          <TouchableOpacity
-            style={[styles.filterButton, filter === "all" && styles.filterButtonActive]}
-            onPress={() => setFilter("all")}
-          >
-            <Text style={[styles.filterText, filter === "all" && styles.filterTextActive]}>
-              Vše
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.filterButton, styles.filterButtonSecond, filter === "unread" && styles.filterButtonActive]}
-            onPress={() => setFilter("unread")}
-          >
-            <Text style={[styles.filterText, filter === "unread" && styles.filterTextActive]}>
-              Nepřečtené
-            </Text>
-          </TouchableOpacity>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Načítání zpráv...</Text>
         </View>
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
+          {/* Filter buttons */}
+          <View style={styles.filterContainer}>
+            <TouchableOpacity
+              style={[styles.filterButton, filter === "all" && styles.filterButtonActive]}
+              onPress={() => setFilter("all")}
+            >
+              <Text style={[styles.filterText, filter === "all" && styles.filterTextActive]}>
+                Vše
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.filterButton, styles.filterButtonSecond, filter === "unread" && styles.filterButtonActive]}
+              onPress={() => setFilter("unread")}
+            >
+              <Text style={[styles.filterText, filter === "unread" && styles.filterTextActive]}>
+                Nepřečtené
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Messages grouped by month */}
-        <View style={styles.messagesContainer}>
-          {Object.keys(filteredGrouped).map((month) => (
-            <View key={month} style={styles.monthSection}>
-              <Text style={styles.monthTitle}>{month}</Text>
-              {filteredGrouped[month].map((message) => (
-                <MessageCard
-                  key={message._id}
-                  message={message}
-                  onPress={() => handleMessagePress(message._id)}
-                />
+          {/* Messages grouped by month */}
+          {Object.keys(filteredGrouped).length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Žádné zprávy</Text>
+            </View>
+          ) : (
+            <View style={styles.messagesContainer}>
+              {Object.keys(filteredGrouped).map((month) => (
+                <View key={month} style={styles.monthSection}>
+                  <Text style={styles.monthTitle}>{month}</Text>
+                  {filteredGrouped[month].map((message) => (
+                    <MessageCard
+                      key={message._id}
+                      message={message}
+                      onPress={() => handleMessagePress(message._id)}
+                    />
+                  ))}
+                </View>
               ))}
             </View>
-          ))}
-        </View>
-      </ScrollView>
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -359,5 +434,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#4C8DEF",
     marginTop: 8,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 50,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#666",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 50,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#999",
+  },
 });
-

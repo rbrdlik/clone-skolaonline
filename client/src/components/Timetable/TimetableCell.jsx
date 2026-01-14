@@ -35,10 +35,29 @@ export default function TimetableCell({ lesson, selectedDate }) {
     setOpen(false);
   };
 
+  // Určení CSS tříd podle typu změny
+  const getCellClasses = () => {
+    if (!lesson) return "lesson-cell";
+    
+    let classes = "lesson-cell filled";
+    
+    if (lesson.isCancelled || lesson.changeType === "cancel") {
+      classes += " cancelled";
+    } else if (lesson.changeType === "change") {
+      classes += " substitution";
+    } else if (lesson.changeType === "room_change") {
+      classes += " room-change"; // Změna místnosti má červenou barvu
+    } else if (lesson.changeType === "note") {
+      classes += " note-change"; // Poznámka má modrou barvu
+    }
+    
+    return classes;
+  };
+
   return (
     <div className="lesson-wrapper">
       <div
-        className={`lesson-cell ${lesson ? "filled" : ""} ${lesson?.isCancelled ? "cancelled" : ""} ${lesson?.changeType === "change" || lesson?.changeType === "room_change" ? "substitution" : ""}`}
+        className={getCellClasses()}
         onContextMenu={(e) => {
           e.preventDefault();
           if (lesson) {
@@ -48,7 +67,11 @@ export default function TimetableCell({ lesson, selectedDate }) {
       >
         {lesson && (
           <>
-            {lesson.hasGrades && <div className="grade-indicator">Z</div>}
+            {lesson.hasGrades && (
+              <div className="grade-indicator" style={{ 
+                right: lesson.note ? '26px' : '4px' 
+              }}>Z</div>
+            )}
             {lesson.note && (
               <div className="note-indicator" title={lesson.note}>
                 P
