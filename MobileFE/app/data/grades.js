@@ -5,9 +5,6 @@ const gradeToNumber = (grade) => {
   if (typeof grade === 'number') return grade;
   const gradeStr = String(grade).trim();
   
-  const hasPlus = gradeStr.includes('+');
-  const hasMinus = gradeStr.includes('-');
-  
   // Nejdřív zkontrolujeme znaménka, pak odstraníme
   const hasPlus = gradeStr.includes('+');
   const hasMinus = gradeStr.includes('-');

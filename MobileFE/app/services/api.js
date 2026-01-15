@@ -19,22 +19,63 @@ async function apiCall(endpoint, options = {}) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
+  // Logování requestu
+  console.log('=== API REQUEST ===');
+  console.log('URL:', url);
+  console.log('Method:', options.method || 'GET');
+  if (options.body) {
+    try {
+      const bodyData = JSON.parse(options.body);
+      // Skryjeme heslo v logu
+      const safeBody = { ...bodyData };
+      if (safeBody.password) {
+        safeBody.password = '***';
+      }
+      console.log('Body:', JSON.stringify(safeBody, null, 2));
+    } catch (e) {
+      console.log('Body:', options.body);
+    }
+  }
+  console.log('Headers:', { ...config.headers, Authorization: config.headers.Authorization ? 'Bearer ***' : undefined });
+
   try {
     const response = await fetch(url, config);
-    const data = await response.json();
+    
+    // Zkusíme parsovat JSON, ale pokud selže (např. prázdná odpověď), použijeme prázdný objekt
+    let data;
+    try {
+      const text = await response.text();
+      data = text ? JSON.parse(text) : {};
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      data = {};
+    }
+
+    // Logování odpovědi
+    console.log('=== API RESPONSE ===');
+    console.log('Status:', response.status, response.statusText);
+    console.log('Response:', JSON.stringify(data, null, 2));
 
     if (!response.ok) {
-      throw new Error(data.message || 'API request failed');
+      console.error(`API Error ${response.status} for ${url}:`, data);
+      const errorMessage = data.message || data.error || `API request failed (${response.status})`;
+      const error = new Error(errorMessage);
+      error.status = response.status;
+      throw error;
     }
 
     return data;
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('=== API ERROR ===');
+    console.error('URL:', url);
+    console.error('Error:', error.message);
+    console.error('Status:', error.status);
     throw error;
   }
 }
 
 const TOKEN_KEY = '@skolaonline_token';
+const REFRESH_TOKEN_KEY = '@skolaonline_refreshToken';
 const USER_KEY = '@skolaonline_user';
 
 export async function getStoredToken() {
@@ -57,9 +98,27 @@ export async function storeToken(token) {
 export async function removeToken() {
   try {
     await AsyncStorage.removeItem(TOKEN_KEY);
+    await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
     await AsyncStorage.removeItem(USER_KEY);
   } catch (error) {
     console.error('Error removing token:', error);
+  }
+}
+
+export async function storeRefreshToken(refreshToken) {
+  try {
+    await AsyncStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  } catch (error) {
+    console.error('Error storing refresh token:', error);
+  }
+}
+
+export async function getStoredRefreshToken() {
+  try {
+    return await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+  } catch (error) {
+    console.error('Error getting refresh token:', error);
+    return null;
   }
 }
 
@@ -83,23 +142,74 @@ export async function storeUser(user) {
 
 export const api = {
   async login(username, password) {
+    console.log('=== LOGIN START ===');
+    console.log('Username:', username);
+    console.log('Password:', '***');
+    console.log('API Base URL:', API_BASE_URL);
+    
+    const loginData = { username, password };
+    
     const data = await apiCall('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify(loginData),
     });
     
-    if (data.token) {
-      await storeToken(data.token);
+    console.log('=== LOGIN RESULT ===');
+    if (data.accessToken) {
+      console.log('✅ Login successful!');
+      console.log('AccessToken received:', data.accessToken.substring(0, 20) + '...');
+      console.log('RefreshToken received:', data.refreshToken ? data.refreshToken.substring(0, 20) + '...' : 'none');
+    } else {
+      console.log('❌ Login failed - no tokens received');
     }
-    if (data.user) {
-      await storeUser(data.user);
+    
+    // Backend vrací accessToken a refreshToken, ne token
+    if (data.accessToken) {
+      await storeToken(data.accessToken);
+    }
+    if (data.refreshToken) {
+      await storeRefreshToken(data.refreshToken);
+    }
+    
+    // Získáme uživatele pomocí /auth/me
+    if (data.accessToken) {
+      try {
+        // Dočasně nastavíme token pro volání getCurrentUser
+        const user = await apiCall('/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${data.accessToken}`
+          }
+        });
+        if (user) {
+          await storeUser(user);
+          return { 
+            accessToken: data.accessToken, 
+            refreshToken: data.refreshToken,
+            user 
+          };
+        }
+      } catch (error) {
+        console.error('Error fetching user after login:', error);
+      }
     }
     
     return data;
   },
 
   async logout() {
-    await removeToken();
+    try {
+      const refreshToken = await getStoredRefreshToken();
+      if (refreshToken) {
+        await apiCall('/auth/logout', {
+          method: 'POST',
+          body: JSON.stringify({ refreshToken }),
+        });
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      await removeToken();
+    }
     return { success: true };
   },
 
@@ -107,28 +217,63 @@ export const api = {
     return await apiCall('/auth/me');
   },
 
-  async getTimetable(studentId, week = null) {
-    const params = week ? `?week=${week}` : '';
-    return await apiCall(`/timetable/${studentId}${params}`);
+  // Získání rozvrhu pro konkrétní den (pro studenta - použije jeho třídu)
+  async getTimetableForDay(studentId, date) {
+    const result = await apiCall(`/schedule/student?studentId=${studentId}&date=${date}`);
+    // Backend vrací pole lekcí přímo, ne v payload
+    return Array.isArray(result) ? result : (result.payload || result.data || []);
   },
 
-  async getGrades(studentId, semester = null) {
-    const params = semester ? `?semester=${semester}` : '';
-    return await apiCall(`/grades/${studentId}${params}`);
+  // Získání rozvrhu třídy pro konkrétní den
+  async getClassTimetableForDay(classId, date, includeCancelled = false) {
+    const cancelledParam = includeCancelled ? '&includeCancelled=true' : '';
+    const result = await apiCall(`/schedule/class?classId=${classId}&date=${date}${cancelledParam}`);
+    // Backend vrací pole lekcí přímo, ne v payload
+    return Array.isArray(result) ? result : (result.payload || result.data || []);
   },
 
+  // Získání detailu hodiny
+  async getLessonDetail(studentId, date, hour) {
+    return await apiCall(`/schedule/student/lesson-detail?studentId=${studentId}&date=${date}&hour=${hour}`);
+  },
+
+  // Získání přehledu známek podle předmětů
+  async getGradesSummary(studentId) {
+    return await apiCall(`/grade/student/${studentId}/summary`);
+  },
+
+  // Získání známek z konkrétního předmětu
+  async getGradesBySubject(studentId, subjectId) {
+    return await apiCall(`/grade/student/${studentId}/subject/${subjectId}`);
+  },
+
+  // Získání detailu známky podle ID
+  async getGradeById(gradeId) {
+    return await apiCall(`/grade/${gradeId}`);
+  },
+
+  // Získání zpráv pro studenta
   async getMessages(studentId) {
-    return await apiCall(`/messages/${studentId}`);
+    return await apiCall(`/message/student/${studentId}`);
   },
 
-  async markMessageAsRead(studentId, messageId) {
-    return await apiCall(`/messages/${studentId}/${messageId}/read`, {
-      method: 'POST',
-    });
+  // Získání detailu zprávy
+  async getMessageDetail(messageId) {
+    return await apiCall(`/message/${messageId}`);
   },
 
   async getClassInfo(classId) {
     return await apiCall(`/class/${classId}`);
+  },
+
+  async getAllClasses() {
+    const data = await apiCall('/class');
+    return data.payload || data || [];
+  },
+
+  async getAllSubjects() {
+    const data = await apiCall('/subject');
+    return data.payload || data || [];
   },
 };
 

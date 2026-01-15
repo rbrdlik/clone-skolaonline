@@ -18,12 +18,15 @@ export default function Rozvrh() {
   const swipeStartX = useRef(0);
   const swipeStartY = useRef(0);
 
+  // Načíst rozvrh při změně týdne nebo při přihlášení uživatele
   useEffect(() => {
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:19',message:'useEffect triggered',data:{currentWeek:currentWeek.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
     // #endregion
-    loadTimetable();
-  }, [currentWeek]);
+    if (user?._id) {
+      loadTimetable();
+    }
+  }, [currentWeek, user?._id]);
 
   // Funkce pro generování hodin pro konkrétní datum (přesunuto z timetable.js)
   const generateLessonsForDate = (dateStr, dayOfWeek) => {
@@ -173,16 +176,159 @@ export default function Rozvrh() {
     return baseLessons;
   };
 
+  // Transformace dat z backendu do formátu pro UI
+  const transformBackendLesson = (lesson, dateStr) => {
+    const hour = lesson.hour || 1;
+    const times = {
+      1: "7:55 - 8:40",
+      2: "8:45 - 9:30",
+      3: "9:40 - 10:25",
+      4: "10:30 - 11:15",
+      5: "11:25 - 12:10",
+      6: "12:20 - 13:05",
+      7: "13:15 - 14:00",
+      8: "14:00 - 14:45",
+      9: "14:55 - 15:40",
+    };
+    
+    // Backend může vracet subject jako objekt { name } nebo jako string
+    const subjectName = lesson.subject?.name || lesson.subject || "Neznámý předmět";
+    
+    // Určení barvy a typu podle schedule change
+    const scheduleChangeType = lesson.scheduleChangeType;
+    const scheduleChange = lesson.scheduleChange;
+    
+    // Backend už aplikuje změny, takže lesson.teacher už obsahuje správného učitele
+    // (substitute_teacher pro suplování, nebo původního učitele)
+    const teacherToUse = lesson.teacher;
+    
+    // Backend může vracet teacher jako objekt { first_name, last_name } nebo jako string
+    const teacherName = teacherToUse 
+      ? (teacherToUse.first_name && teacherToUse.last_name 
+          ? `${teacherToUse.first_name} ${teacherToUse.last_name}`.trim()
+          : (typeof teacherToUse === 'string' ? teacherToUse : "Neznámý učitel"))
+      : "Neznámý učitel";
+    
+    // Backend už aplikuje změny, takže lesson.room už obsahuje správnou místnost
+    const roomToUse = lesson.room || "";
+    let color = "#EEF3FF"; // Výchozí barva
+    let changeIcon = null;
+    
+    if (scheduleChangeType === "cancel") {
+      color = "#FFE5E5"; // Světle červená pro zrušené
+    } else if (scheduleChangeType === "change") {
+      color = "#FFF4E5"; // Světle oranžová pro změnu
+    } else if (scheduleChangeType === "room_change") {
+      color = "#FFE5E5"; // Světle červená pro změnu místnosti
+    } else if (scheduleChangeType === "note") {
+      color = "#E5F0FF"; // Světle modrá pro poznámku
+    }
+    
+    return {
+      _id: `lesson-${dateStr}-${hour}`,
+      lessonNumber: hour,
+      subject: subjectName,
+      teacher: teacherName,
+      room: roomToUse,
+      classroom: roomToUse,
+      time: times[hour] || "7:55 - 8:40",
+      color: color,
+      date: dateStr,
+      hasGrade: !!lesson.grade,
+      hasNote: !!lesson.note, // Poznámka se zobrazí vždy, pokud existuje (i v kombinaci)
+      isCancelled: scheduleChangeType === "cancel",
+      isConsultation: false,
+      isDifferentClass: scheduleChangeType === "change",
+      isEvent: false,
+      scheduleChangeType: scheduleChangeType, // Uložíme typ změny
+      scheduleChange: scheduleChange, // Uložíme celou změnu
+    };
+  };
+
   const loadTimetable = async () => {
     setLoading(true);
+    // Reset dat před načtením nových - zabrání duplikaci
+    setLessons([]);
     try {
-      const weekStr = formatWeekDate(currentWeek);
-      if (user?.studentId) {
-        const data = await api.getTimetable(user.studentId, weekStr);
-        setLessons(data.lessons || []);
-        setDays(data.days || []);
+      const weekDays = generateWeekDays(currentWeek);
+      setDays(weekDays);
+      
+      // Pokud je student přihlášen, načteme rozvrh jeho třídy
+      if (user?._id && user?.role === 'student') {
+        const weekLessons = [];
+        
+        // Použijeme classId pokud je dostupné, jinak použijeme studentId endpoint
+        if (user?.classId) {
+          console.log(`Loading timetable for classId: ${user.classId}`);
+          // Načteme rozvrh třídy pro každý den v týdnu
+          for (const day of weekDays) {
+            if (day.fullDate) {
+              const dateStr = day.fullDate.toISOString().split('T')[0];
+              try {
+                console.log(`Loading class timetable for date: ${dateStr}`);
+                const dayLessons = await api.getClassTimetableForDay(user.classId, dateStr);
+                console.log(`Received lessons for ${dateStr}:`, dayLessons);
+                // Backend vrací pole lekcí přímo
+                if (Array.isArray(dayLessons) && dayLessons.length > 0) {
+                  const transformed = dayLessons.map(lesson => transformBackendLesson(lesson, dateStr));
+                  console.log(`Transformed ${transformed.length} lessons for ${dateStr}`);
+                  weekLessons.push(...transformed);
+                } else {
+                  console.log(`No lessons found for ${dateStr}`);
+                }
+              } catch (error) {
+                console.error(`Error loading class timetable for ${dateStr}:`, error);
+                // Fallback na student endpoint
+                try {
+                  console.log(`Trying fallback student endpoint for ${dateStr}`);
+                  const dayLessons = await api.getTimetableForDay(user._id, dateStr);
+                  console.log(`Fallback received lessons for ${dateStr}:`, dayLessons);
+                  if (Array.isArray(dayLessons) && dayLessons.length > 0) {
+                    const transformed = dayLessons.map(lesson => transformBackendLesson(lesson, dateStr));
+                    weekLessons.push(...transformed);
+                  }
+                } catch (fallbackError) {
+                  console.error(`Error loading student timetable for ${dateStr}:`, fallbackError);
+                }
+              }
+            }
+          }
+        } else {
+          console.log(`Loading timetable for studentId: ${user._id} (no classId)`);
+          // Fallback: použijeme student endpoint (který automaticky najde třídu)
+          const studentId = user._id;
+          for (const day of weekDays) {
+            if (day.fullDate) {
+              const dateStr = day.fullDate.toISOString().split('T')[0];
+              try {
+                console.log(`Loading student timetable for date: ${dateStr}`);
+                const dayLessons = await api.getTimetableForDay(studentId, dateStr);
+                console.log(`Received lessons for ${dateStr}:`, dayLessons);
+                // Backend vrací pole lekcí přímo
+                if (Array.isArray(dayLessons) && dayLessons.length > 0) {
+                  const transformed = dayLessons.map(lesson => transformBackendLesson(lesson, dateStr));
+                  console.log(`Transformed ${transformed.length} lessons for ${dateStr}`);
+                  weekLessons.push(...transformed);
+                } else {
+                  console.log(`No lessons found for ${dateStr}`);
+                }
+              } catch (error) {
+                console.error(`Error loading timetable for ${dateStr}:`, error);
+              }
+            }
+          }
+        }
+        
+        console.log(`Total lessons loaded: ${weekLessons.length}`);
+        
+        setLessons(weekLessons);
+        
+        // Nastavit selectedDate na první den nebo dnešní den
+        if (!selectedDate) {
+          const todayDay = weekDays.find(d => d.today);
+          setSelectedDate(todayDay?.fullDate || weekDays[0]?.fullDate || new Date());
+        }
       } else {
-        const weekDays = generateWeekDays(currentWeek);
         // Fallback na mock data - generujeme dny pro aktuální týden
         const weekDays = generateWeekDays(currentWeek);
         // Dynamicky generujeme hodiny pro každý den v týdnu
@@ -194,8 +340,6 @@ export default function Rozvrh() {
             weekLessons.push(...dayLessons);
           }
         });
-        setDays(weekDays);
-        setLessons(weekLessons);
         // #region agent log
         fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:35',message:'Mock lessons loaded',data:{lessonsCount:weekLessons.length,daysCount:weekDays.length,weekStart:weekDays[0]?.fullDate?.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
         // #endregion
@@ -230,10 +374,6 @@ export default function Rozvrh() {
     }
   };
 
-  const generateWeekDays = (weekStart) => {
-    const days = [];
-    const startOfWeek = new Date(weekStart);
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
   // Generování dní pro týden
   const generateWeekDays = (weekStart) => {
     // #region agent log
@@ -264,9 +404,6 @@ export default function Rozvrh() {
         today: dateStr === todayStr,
       });
     }
-    return days;
-  };
-
     // #region agent log
     fetch('http://127.0.0.1:7242/ingest/23a33630-ca00-4190-9bc8-ab7683a4bfd2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'rozvrh.jsx:71',message:'generateWeekDays result',data:{daysCount:days.length,firstDay:days[0]?.fullDate?.toISOString(),lastDay:days[4]?.fullDate?.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
     // #endregion
@@ -378,8 +515,6 @@ export default function Rozvrh() {
       if (lesson.date) {
         return lesson.date === dayStr;
       }
-      return true;
-    });
       // Pokud není datum, zobrazíme všechny (pro mock data)
       return true;
     });
@@ -421,20 +556,28 @@ export default function Rozvrh() {
   const renderLesson = (lesson) => {
     const icons = [];
     
+    // Ikony podle schedule change (priorita)
+    if (lesson.scheduleChangeType === "cancel") {
+      icons.push(require("./assets/cancel.png"));
+    } else if (lesson.scheduleChangeType === "change") {
+      icons.push(require("./assets/change.png"));
+    } else if (lesson.scheduleChangeType === "room_change") {
+      // Pro změnu místnosti použijeme jinou ikonku nebo text
+      icons.push({ type: "icon", name: "location" });
+    }
+    // Poznámka se zobrazí vždy, pokud existuje (i v kombinaci s jinými změnami)
+    // NEPŘIDÁVÁME ji zde, pokud už je scheduleChangeType === "note", protože se přidá níže
+    
+    // Ostatní ikony
     if (lesson.hasGrade) {
       icons.push(require("./assets/newgrade.png"));
     }
+    // Poznámka se zobrazí vždy, pokud existuje (i v kombinaci s jinými změnami)
     if (lesson.hasNote) {
       icons.push(require("./assets/note.png"));
     }
-    if (lesson.isCancelled) {
-      icons.push(require("./assets/cancel.png"));
-    }
     if (lesson.isConsultation) {
       icons.push(require("./assets/special.png"));
-    }
-    if (lesson.isDifferentClass) {
-      icons.push(require("./assets/change.png"));
     }
     if (lesson.isEvent) {
       icons.push(require("./assets/event.png"));
@@ -444,20 +587,44 @@ export default function Rozvrh() {
       <TouchableOpacity
         key={lesson._id}
         style={[styles.lesson, { backgroundColor: lesson.color || "#EEF3FF" }]}
-        onPress={() => router.push({
-          pathname: "/lesson-detail",
-          params: { lessonId: lesson._id }
-        })}
+        onPress={() => {
+          // Předáme date a hour pro API volání
+          const dateStr = lesson.date || (activeDayData?.fullDate?.toISOString().split('T')[0]);
+          const hour = lesson.lessonNumber;
+          router.push({
+            pathname: "/lesson-detail",
+            params: { 
+              lessonId: lesson._id,
+              date: dateStr,
+              hour: hour
+            }
+          });
+        }}
       >
         {icons.length > 0 && (
           <View style={styles.iconsContainer}>
-            {icons.map((icon, index) => (
-              <Image
-                key={index}
-                source={icon}
-                style={styles.lessonIcon}
-              />
-            ))}
+            {icons.map((icon, index) => {
+              // Pokud je to Ionicons ikona
+              if (icon && typeof icon === 'object' && icon.type === "icon") {
+                return (
+                  <Ionicons
+                    key={index}
+                    name={icon.name}
+                    size={20}
+                    color="#4C8DEF"
+                    style={styles.lessonIconIonicons}
+                  />
+                );
+              }
+              // Jinak je to obrázek
+              return (
+                <Image
+                  key={index}
+                  source={icon}
+                  style={styles.lessonIcon}
+                />
+              );
+            })}
           </View>
         )}
         <View style={styles.lessonNumberBox}>
@@ -620,6 +787,9 @@ const styles = StyleSheet.create({
   lessonIcon: {
     width: 20,
     height: 20,
+  },
+  lessonIconIonicons: {
+    marginLeft: 4,
   },
   chevron: {
     marginLeft: 8,

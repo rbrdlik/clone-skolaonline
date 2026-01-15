@@ -30,7 +30,7 @@ export default function Login() {
       const result = await login(username.trim(), password);
       
       if (result.success) {
-        // Přesměrování na hlavní stránku (rozvrh)
+        // Přesměrování na hlavní stránku (rozvrh) - rozvrh se automaticky načte
         router.replace("/rozvrh");
       } else {
         Alert.alert(
@@ -49,8 +49,6 @@ export default function Login() {
     }
   };
 
-  const handleSkipLogin = () => {
-    login('dev', 'dev').then(() => {
   // Development mode - tlačítko pro přeskočení přihlášení
   const handleSkipLogin = () => {
     // Simulace úspěšného přihlášení
@@ -141,7 +139,6 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
     backgroundColor: "#ffffff",
   },
   content: {

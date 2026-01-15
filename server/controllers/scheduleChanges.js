@@ -52,14 +52,16 @@ exports.createScheduleChange = async (req, res) => {
       });
     }
 
-    // 3️⃣ pokud ano → přepíšeme / aktualizujeme hodinu
+    // 3️⃣ pokud ano → zkontrolujeme, jestli už existuje změna pro tuto hodinu
     const existingIndex = scheduleChange.changes.findIndex(
-      c => c.hour === hour
+      c => c.hour === hour && c.type === type
     );
 
     if (existingIndex !== -1) {
+      // Pokud existuje změna stejného typu, přepíšeme ji
       scheduleChange.changes[existingIndex] = changeData;
     } else {
+      // Pokud neexistuje změna stejného typu, přidáme novou (umožní kombinace)
       scheduleChange.changes.push(changeData);
     }
 
@@ -77,7 +79,7 @@ exports.createScheduleChange = async (req, res) => {
 
 exports.deleteScheduleChangeHour = async (req, res) => {
   try {
-    const { class_id, date, hour } = req.body;
+    const { class_id, date, hour, type } = req.body;
 
     const scheduleChange = await ScheduleChanges.findOne({
       class_id,
@@ -88,9 +90,17 @@ exports.deleteScheduleChangeHour = async (req, res) => {
       return res.status(404).json({ message: "Změna nenalezena" });
     }
 
-    scheduleChange.changes = scheduleChange.changes.filter(
-      c => c.hour !== Number(hour)
-    );
+    // Pokud je specifikován typ, odstraníme pouze změnu tohoto typu
+    // Jinak odstraníme všechny změny pro tuto hodinu
+    if (type) {
+      scheduleChange.changes = scheduleChange.changes.filter(
+        c => !(c.hour === Number(hour) && c.type === type)
+      );
+    } else {
+      scheduleChange.changes = scheduleChange.changes.filter(
+        c => c.hour !== Number(hour)
+      );
+    }
 
     await scheduleChange.save();
 

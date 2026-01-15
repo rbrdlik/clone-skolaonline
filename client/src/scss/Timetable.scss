@@ -205,6 +205,21 @@ $border: #e5e7eb;
     }
   }
 
+  &.room-change {
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+
+    .changed-text {
+      color: #dc2626 !important;
+      font-weight: 600;
+    }
+  }
+
+  &.note-change {
+    background: #dbeafe !important;
+    border-color: #93c5fd !important;
+  }
+
   .grade-indicator {
     position: absolute;
     top: 4px;
@@ -253,7 +268,9 @@ $border: #e5e7eb;
       border-radius: 6px;
       font-size: 12px;
       font-weight: normal;
-      white-space: nowrap;
+      white-space: normal;
+      max-width: 250px;
+      word-wrap: break-word;
       z-index: 1000;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       pointer-events: none;

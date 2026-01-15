@@ -1,24 +1,57 @@
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import { useState, useEffect } from "react";
 import Header from "./components/Header";
-import { Ionicons } from "@expo/vector-icons";
+import { api } from "./services/api";
 
-// Mock data - v reálné aplikaci by se načítalo z API
+// Mock data - fallback
 const mockMessageData = {
   _id: "msg-1",
   sender: "Ing. Václav Bohata",
   subject: "Podvodný email",
   date: "20.12.2025",
-  content: `Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
-
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.`,
+  content: `Lorem Ipsum is simply dummy text of the printing and typesetting industry.`,
 };
 
 export default function MessageDetail() {
   const { messageId } = useLocalSearchParams();
+  const [message, setMessage] = useState(mockMessageData);
+  const [loading, setLoading] = useState(true);
   
-  // V reálné aplikaci by se načítalo z API podle messageId
-  const message = mockMessageData;
+  useEffect(() => {
+    loadMessage();
+  }, [messageId]);
+
+  const loadMessage = async () => {
+    setLoading(true);
+    try {
+      if (messageId) {
+        const data = await api.getMessageDetail(messageId);
+        // Backend vrací: { id, title, content, author: { first_name, last_name, gender }, created_at }
+        const date = new Date(data.created_at);
+        setMessage({
+          _id: data.id,
+          sender: `${data.author.first_name} ${data.author.last_name}`,
+          subject: data.title,
+          date: date.toLocaleDateString('cs-CZ'),
+          content: data.content,
+        });
+      }
+    } catch (error) {
+      console.error("Error loading message:", error);
+      // Použijeme mock data při chybě
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#4C8DEF" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

@@ -1,5 +1,6 @@
-import { Stack, usePathname } from "expo-router";
+import { Stack, usePathname, useRouter } from "expo-router";
 import { View, StyleSheet, ActivityIndicator } from "react-native";
+import { useEffect } from "react";
 import BottomNav from "./components/BottomNav";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationsProvider } from "./context/NotificationsContext";
@@ -7,6 +8,14 @@ import { NotificationsProvider } from "./context/NotificationsContext";
 function RootLayoutNav() {
   const { isAuthenticated, loading } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Pokud není přihlášen a není na login stránce, přesměruj na login
+  useEffect(() => {
+    if (!loading && !isAuthenticated && pathname !== "/" && pathname !== "/index") {
+      router.replace("/");
+    }
+  }, [loading, isAuthenticated, pathname]);
 
   if (loading) {
     return (

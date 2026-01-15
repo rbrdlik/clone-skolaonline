@@ -5,7 +5,6 @@ import TimetableCell from "./TimetableCell";
 import { mockLessons } from "./mockLessons";
 import { getScheduleByClassAndDay } from "../../models/schedule";
 import { checkGradesForLesson } from "../../models/grade";
-import { getScheduleChangesByClassAndDate } from "../../models/scheduleChanges";
 import calendar from "../../assets/icons/calendar.png";
 import React from "react";
 
@@ -49,45 +48,49 @@ export default function TimetableGrid({ selectedDate, classId }) {
           const dayDate = addDays(currentWeekStart, DAYS.indexOf(day));
           const dateString = format(dayDate, "yyyy-MM-dd");
 
-          const [dayLessons, scheduleChanges] = await Promise.all([
-            getScheduleByClassAndDay(classId, DAY_MAPPING[day], true, dateString),
-            getScheduleChangesByClassAndDate(classId, dateString)
-          ]);
-
-          const changesMap = {};
-          if (scheduleChanges && scheduleChanges.status === 200 && Array.isArray(scheduleChanges.payload)) {
-            scheduleChanges.payload.forEach(change => {
-              changesMap[change.hour] = change;
-            });
-          }
+          // Použijeme endpoint který už vrací aplikované změny
+          const dayLessons = await getScheduleByClassAndDay(classId, DAY_MAPPING[day], true, dateString);
 
           if (Array.isArray(dayLessons)) {
             for (const lesson of dayLessons) {
               const key = `${day}-${lesson.hour}`;
-              const formatTeacherName = (firstName, lastName) => {
+              const formatTeacherName = (teacherObj) => {
+                if (!teacherObj) return "";
+                if (typeof teacherObj === 'string') return teacherObj;
+                const firstName = teacherObj.first_name || "";
+                const lastName = teacherObj.last_name || "";
                 if (!firstName || !lastName) return "";
                 const firstInitial = firstName.charAt(0).toUpperCase();
                 return `${firstInitial}. ${lastName}`;
               };
               
-              const teacher = typeof lesson.teacher === 'object' 
-                ? formatTeacherName(lesson.teacher.first_name, lesson.teacher.last_name)
-                : "";
-              const teacherId = typeof lesson.teacher === 'object' ? lesson.teacher._id : null;
-              const subjectId = typeof lesson.subject === 'object' ? lesson.subject._id : null;
+              const teacher = formatTeacherName(lesson.teacher);
+              const teacherId = typeof lesson.teacher === 'object' && lesson.teacher._id 
+                ? lesson.teacher._id 
+                : null;
+              const subjectId = typeof lesson.subject === 'object' && lesson.subject._id
+                ? lesson.subject._id 
+                : null;
               const subjectName = typeof lesson.subject === 'object' 
                 ? (lesson.subject.short_name || lesson.subject.name) 
-                : lesson.subject;
+                : (lesson.subject || "");
               
-              const change = changesMap[lesson.hour];
-              const isCancelled = change && change.type === "cancel";
-              const isSubstitution = change && change.type === "change";
-              const isRoomChange = change && change.type === "room_change";
-              const hasNote = change && change.type === "note" && change.note;
-              const displayTeacher = isSubstitution && change?.substitute_teacher
-                ? formatTeacherName(change.substitute_teacher.first_name, change.substitute_teacher.last_name)
-                : teacher;
-              const displayRoom = isRoomChange && change?.room ? change.room : (lesson.room || "");
+              // Zkontrolujeme scheduleChangeType z backendu (může být kombinace více změn)
+              const scheduleChangeType = lesson.scheduleChangeType;
+              const scheduleChange = lesson.scheduleChange;
+              const scheduleChangeTypes = lesson.scheduleChangeTypes || [];
+              const isCancelled = scheduleChangeType === "cancel" || scheduleChangeTypes.includes("cancel");
+              const isSubstitution = scheduleChangeType === "change" || scheduleChangeTypes.includes("change");
+              const isRoomChange = scheduleChangeType === "room_change" || scheduleChangeTypes.includes("room_change");
+              // Poznámka může být samostatně nebo v kombinaci s jinými změnami
+              const hasNote = lesson.note && (scheduleChangeType === "note" || scheduleChangeTypes.includes("note") || lesson.note);
+              
+              // Backend už aplikuje změny, takže lesson.teacher už obsahuje správného učitele
+              // (substitute_teacher pro suplování, nebo původního učitele)
+              const displayTeacher = teacher;
+              
+              // Backend už aplikuje změny, takže lesson.room už obsahuje správnou místnost
+              const displayRoom = lesson.room || "";
               
               let hasGrades = false;
               if (subjectId && classId) {
@@ -111,8 +114,8 @@ export default function TimetableGrid({ selectedDate, classId }) {
                 classId: classId,
                 hasGrades: hasGrades,
                 isCancelled: isCancelled,
-                changeType: change ? change.type : null,
-                note: hasNote ? change.note : null,
+                changeType: scheduleChangeType || null,
+                note: lesson.note || null, // Poznámka se zobrazí vždy, pokud existuje (i v kombinaci)
                 isTeacherChanged: isSubstitution,
                 isRoomChanged: isRoomChange
               };
