@@ -22,12 +22,23 @@ export default function Navbar() {
           </Link>
 
           <div className="topbar-right">
-            <img src={signedinuser} alt="uživatel" className="user-avatar" />
+            <Link to="/profile" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+              <img src={signedinuser} alt="uživatel" className="user-avatar" />
 
-            <div className="user-text">
-              <div className="user-name">Iva Lišková</div>
-              <div className="user-role">Učitelka</div>
-            </div>
+              <div className="user-text">
+                <div className="user-name">
+                  {user?.title ? `${user.title} ` : ""}
+                  {user?.first_name || ""} {user?.last_name || ""}
+                  {!user?.first_name && !user?.last_name && "Uživatel"}
+                </div>
+                <div className="user-role">
+                  {user?.role === "admin" ? "Administrátor/ka" : 
+                   user?.role === "učitel" ? "Učitel/ka" : 
+                   user?.role === "student" ? "Student/ka" : 
+                   "Uživatel"}
+                </div>
+              </div>
+            </Link>
 
             <span className="vertical-divider" />
 

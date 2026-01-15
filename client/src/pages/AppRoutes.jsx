@@ -20,6 +20,8 @@ import EditStudent from "./Administrator/EditStudent";
 import EditTeacher from "./Administrator/EditTeacher";
 import EditSubject from "./Administrator/EditSubject";
 import EditClass from "./Administrator/EditClass";
+import Profile from "./Profile/Profile";
+import TimetableTeacher from "./TimetableTeacher/TimetableTeacher";
 import ProtectedRoute from "../components/ProtectedRoute";
 import AdminRoute from "../components/AdminRoute";
 import RootRedirect from "../components/RootRedirect";
@@ -196,6 +198,14 @@ export default function AppRoutes() {
             element={
               <ProtectedRoute>
                 <Timetable />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />

@@ -100,7 +100,19 @@ exports.createGradesBulk = async (req, res) => {
       return res.status(400).json({ message: "Nejsou zadány známky" });
     }
 
-    const gradeDate = date ? new Date(date) : new Date();
+    // Správné parsování data - zajistíme, že se použije datum z parametrů
+    let gradeDate;
+    if (date) {
+      // Pokud je date string ve formátu YYYY-MM-DD, parsujeme ho správně
+      const dateStr = typeof date === 'string' ? date : date.toString();
+      const [year, month, day] = dateStr.split('-').map(Number);
+      // Vytvoříme datum v lokálním čase na začátku dne (00:00:00)
+      gradeDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+    } else {
+      // Pokud není zadáno datum, použijeme dnešní datum
+      gradeDate = new Date();
+      gradeDate.setHours(0, 0, 0, 0);
+    }
 
     const documents = grades.map(g => ({
       student_id: g.student_id,
@@ -175,37 +187,6 @@ exports.getAllStudentGrades = async (req, res) => {
       class: g.class_id.name,
       date: g.date
     }));
-
-    res.status(200).json(response);
-
-    const result = {};
-
-    grades.forEach(grade => {
-      const subjectId = grade.subject_id._id.toString();
-      const subjectName = grade.subject_id.name;
-
-      if (!result[subjectId]) {
-        result[subjectId] = {
-          subject: subjectName,
-          grades: [],
-          weightedSum: 0,
-          weightSum: 0
-        };
-      }
-
-      // seznam známek (jen hodnoty)
-      if (grade.value !== 0) {
-        result[subjectId].grades.push(grade.value);
-      } else {
-        result[subjectId].grades.push("NH");
-      }
-
-      // výpočet průměru (NH se nepočítá)
-      if (grade.value !== 0) {
-        result[subjectId].weightedSum += grade.value * grade.weight;
-        result[subjectId].weightSum += grade.weight;
-      }
-    });
 
     res.status(200).json(response);
 
@@ -331,39 +312,3 @@ exports.deleteGrade = async (req, res) => {
   }
 };
 
-exports.createGradesBulk = async (req, res) => {
-  try {
-    const {
-      subject_id,
-      teacher_id,
-      class_id,
-      weight,
-      description,
-      grades
-    } = req.body;
-
-    if (!grades || !grades.length) {
-      return res.status(400).json({ message: "Nejsou zadány známky" });
-    }
-
-    const documents = grades.map(g => ({
-      student_id: g.student_id,
-      subject_id,
-      teacher_id,
-      class_id,
-      value: g.value, // 0 = NH
-      weight,
-      description
-    }));
-
-    const result = await Grade.insertMany(documents);
-
-    res.status(201).json({
-      message: "Známky vytvořeny",
-      count: result.length
-    });
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};

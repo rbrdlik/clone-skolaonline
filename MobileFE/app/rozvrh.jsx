@@ -215,7 +215,7 @@ export default function Rozvrh() {
     let changeIcon = null;
     
     if (scheduleChangeType === "cancel") {
-      color = "#FFE5E5"; // Světle červená pro zrušené
+      color = "#D1D5DB"; // Šedá pro zrušené hodiny
     } else if (scheduleChangeType === "change") {
       color = "#FFF4E5"; // Světle oranžová pro změnu
     } else if (scheduleChangeType === "room_change") {
@@ -553,7 +553,7 @@ export default function Rozvrh() {
     );
   };
 
-  const renderLesson = (lesson) => {
+  const renderLesson = (lesson, index) => {
     const icons = [];
     
     // Ikony podle schedule change (priorita)
@@ -583,9 +583,12 @@ export default function Rozvrh() {
       icons.push(require("./assets/event.png"));
     }
 
+    // Unikátní key zahrnující datum a index pro zabránění duplikaci
+    const uniqueKey = `${lesson.date || activeDayData?.fullDate?.toISOString()}-${lesson._id}-${index}`;
+
     return (
       <TouchableOpacity
-        key={lesson._id}
+        key={uniqueKey}
         style={[styles.lesson, { backgroundColor: lesson.color || "#EEF3FF" }]}
         onPress={() => {
           // Předáme date a hour pro API volání
@@ -657,11 +660,12 @@ export default function Rozvrh() {
         <View style={styles.daysDivider} />
 
         <View 
+          key={activeDayData?.fullDate?.toISOString() || 'no-date'}
           style={styles.lessonsContainer}
           {...lessonsPanResponder.panHandlers}
         >
           {dayLessons.length > 0 ? (
-            dayLessons.map(renderLesson)
+            dayLessons.map((lesson, index) => renderLesson(lesson, index))
           ) : (
             <Text style={styles.noLessons}>Žádné hodiny na tento den</Text>
           )}

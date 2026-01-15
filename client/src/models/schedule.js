@@ -166,3 +166,23 @@ export const getScheduleByClassAndDay = async (classId, dayOfWeek, includeCancel
   const data = await req.json();
   return Array.isArray(data) ? data : [];
 };
+
+export const getScheduleByTeacherAndDay = async (teacherId, dayOfWeek, includeCancelled = false, baseDate = null) => {
+  const token = localStorage.getItem("token");
+
+  if (!token) return null;
+
+  const date = getDateForDayOfWeek(dayOfWeek, baseDate);
+  const url = `http://localhost:3000/schedule/teacher?teacherId=${teacherId}&date=${date}${includeCancelled ? "&includeCancelled=true" : ""}`;
+  const req = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    method: "GET",
+  });
+
+  const data = await req.json();
+  return Array.isArray(data) ? data : [];
+};
