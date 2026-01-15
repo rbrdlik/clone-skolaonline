@@ -13,37 +13,100 @@ const getDayOfWeek = (dateString) => {
 const applyScheduleChanges = (lessons, changes) => {
   const result = [...lessons];
 
+  // Seskupíme změny podle hodiny, protože může být více změn pro jednu hodinu
+  const changesByHour = {};
   changes.forEach(change => {
-    const index = result.findIndex(l => l.hour === change.hour);
+    if (!changesByHour[change.hour]) {
+      changesByHour[change.hour] = [];
+    }
+    changesByHour[change.hour].push(change);
+  });
 
-    if (change.type === "cancel") {
-      if (index !== -1) result.splice(index, 1);
+  // Aplikujeme změny pro každou hodinu
+  Object.keys(changesByHour).forEach(hourStr => {
+    const hour = parseInt(hourStr);
+    const hourChanges = changesByHour[hour];
+    const index = result.findIndex(l => l.hour === hour);
+
+    if (index === -1) return; // Hodina neexistuje
+
+    const originalLesson = result[index];
+    
+    // Zjistíme typy změn pro tuto hodinu
+    const changeTypes = hourChanges.map(c => c.type);
+    const hasCancel = changeTypes.includes("cancel");
+    const hasChange = changeTypes.includes("change");
+    const hasRoomChange = changeTypes.includes("room_change");
+    const hasNote = changeTypes.includes("note");
+
+    // Vytvoříme kopii původní hodiny
+    let modifiedLesson = {
+      ...originalLesson.toObject ? originalLesson.toObject() : { ...originalLesson }
+    };
+
+    // Pokud je hodina zrušená, označíme ji jako zrušenou, ale neodstraníme
+    if (hasCancel) {
+      modifiedLesson.scheduleChangeType = "cancel";
+      modifiedLesson.scheduleChange = hourChanges.length === 1 ? hourChanges[0] : hourChanges;
+      if (changeTypes.length > 1) {
+        modifiedLesson.scheduleChangeTypes = changeTypes;
+      }
+      result[index] = modifiedLesson;
+      return; // Neaplikujeme další změny, jen označíme jako zrušenou
     }
 
-    if (change.type === "change") {
-      if (index !== -1) {
-        result[index] = {
-          hour: change.hour,
-          subject: change.subject,
-          teacher: change.substitute_teacher || change.teacher,
-          room: change.room,
-          group_id: change.group_id
-        };
+    // Aplikujeme změny v pořadí: change, room_change, note
+    if (hasChange) {
+      const changeChange = hourChanges.find(c => c.type === "change");
+      if (changeChange) {
+        // Pro suplování použijeme substitute_teacher pokud existuje, jinak původního učitele
+        if (changeChange.substitute_teacher) {
+          modifiedLesson.teacher = changeChange.substitute_teacher;
+        }
+        // Pokud je v change změněna místnost, použijeme ji
+        if (changeChange.room) {
+          modifiedLesson.room = changeChange.room;
+        }
+        // Pokud je v change změněn group_id, použijeme ho
+        if (changeChange.group_id !== undefined && changeChange.group_id !== null) {
+          modifiedLesson.group_id = changeChange.group_id;
+        }
       }
     }
 
-    if (change.type === "room_change") {
-      if (index !== -1) {
-        result[index] = {
-          ...result[index],
-          room: change.room
-        };
+    if (hasRoomChange) {
+      const roomChange = hourChanges.find(c => c.type === "room_change");
+      if (roomChange && roomChange.room) {
+        modifiedLesson.room = roomChange.room;
       }
     }
 
-    if (change.type === "note" && index !== -1) {
-      result[index].note = change.note;
+    if (hasNote) {
+      const noteChange = hourChanges.find(c => c.type === "note");
+      if (noteChange && noteChange.note) {
+        modifiedLesson.note = noteChange.note;
+      }
     }
+
+    // Přidáme informace o schedule change pro frontend
+    // Priorita: change > room_change > note (cancel už je zpracováno výše)
+    if (hasChange) {
+      modifiedLesson.scheduleChangeType = "change";
+    } else if (hasRoomChange) {
+      modifiedLesson.scheduleChangeType = "room_change";
+    } else if (hasNote) {
+      modifiedLesson.scheduleChangeType = "note";
+    }
+    
+    // Pokud je více typů změn, uložíme všechny
+    if (changeTypes.length > 1) {
+      modifiedLesson.scheduleChangeTypes = changeTypes;
+    }
+
+    // Uložíme celou změnu pro detail
+    modifiedLesson.scheduleChange = hourChanges.length === 1 ? hourChanges[0] : hourChanges;
+
+    result[index] = modifiedLesson;
   });
 
   return result.sort((a, b) => a.hour - b.hour);
@@ -75,12 +138,15 @@ exports.getStudentScheduleForDay = async (req, res) => {
       l => !l.group_id || groupIds.includes(l.group_id.toString())
     );
 
+    // Načteme schedule changes s populated daty
     const changes = await ScheduleChanges.findOne({
       class_id: studentClass._id,
       date: new Date(date)
-    });
+    })
+      .populate("changes.teacher", "first_name last_name")
+      .populate("changes.substitute_teacher", "first_name last_name");
 
-    if (changes) {
+    if (changes && changes.changes && changes.changes.length > 0) {
       lessons = applyScheduleChanges(lessons, changes.changes);
     }
 
@@ -108,22 +174,54 @@ exports.getTeacherScheduleForDay = async (req, res) => {
     schedules.forEach(s => {
       s.lessons.forEach(l => {
         if (l.teacher._id.toString() === teacherId) {
+          const lessonObj = l.toObject ? l.toObject() : { ...l };
           lessons.push({
-            hour: l.hour,
+            ...lessonObj,
             class: s.class_id.name,
-            subject: l.subject.name,
-            room: l.room,
-            group_id: l.group_id
+            class_id: s.class_id._id
           });
         }
       });
     });
 
-    const changes = await ScheduleChanges.find({ date: new Date(date) });
+    // Aplikujeme schedule changes pro všechny třídy, kde učitel učí
+    const classIds = [...new Set(lessons.map(l => l.class_id.toString()))];
+    
+    for (const classId of classIds) {
+      const changes = await ScheduleChanges.findOne({
+        class_id: classId,
+        date: new Date(date)
+      })
+        .populate("changes.teacher", "first_name last_name")
+        .populate("changes.substitute_teacher", "first_name last_name");
 
-    // (volitelně lze doplnit přepsání změn)
+      if (changes && changes.changes && changes.changes.length > 0) {
+        // Aplikujeme změny pouze na hodiny tohoto učitele v této třídě
+        const classLessons = lessons.filter(l => l.class_id.toString() === classId);
+        const updatedLessons = applyScheduleChanges(classLessons, changes.changes);
+        
+        // Aktualizujeme lessons array
+        lessons = lessons.filter(l => l.class_id.toString() !== classId);
+        lessons.push(...updatedLessons);
+      }
+    }
 
-    res.status(200).json(lessons.sort((a, b) => a.hour - b.hour));
+    // Transformujeme na formát pro frontend
+    const result = lessons.map(l => ({
+      hour: l.hour,
+      subject: l.subject,
+      teacher: l.teacher,
+      room: l.room,
+      class: l.class,
+      class_id: l.class_id,
+      group_id: l.group_id,
+      scheduleChangeType: l.scheduleChangeType,
+      scheduleChangeTypes: l.scheduleChangeTypes,
+      scheduleChange: l.scheduleChange,
+      note: l.note
+    }));
+
+    res.status(200).json(result.sort((a, b) => a.hour - b.hour));
 
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -145,12 +243,15 @@ exports.getClassScheduleForDay = async (req, res) => {
 
     let lessons = schedule.lessons;
 
+    // Načteme schedule changes s populated daty
     const changes = await ScheduleChanges.findOne({
       class_id: classId,
       date: new Date(date)
-    });
+    })
+      .populate("changes.teacher", "first_name last_name")
+      .populate("changes.substitute_teacher", "first_name last_name");
 
-    if (changes) {
+    if (changes && changes.changes && changes.changes.length > 0) {
       lessons = applyScheduleChanges(lessons, changes.changes);
     }
 
@@ -295,6 +396,36 @@ exports.getStudentLessonDetail = async (req, res) => {
             description: change.grade.description
           };
         }
+      }
+    }
+
+    // 7️⃣ načteme známku z Grade modelu pro danou hodinu (pokud není v schedule change)
+    if (!lessonDetail.grade) {
+      const gradeDate = new Date(date);
+      const startOfDay = new Date(gradeDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(gradeDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const grade = await Grade.findOne({
+        student_id: studentId,
+        subject_id: lesson.subject._id,
+        class_id: studentClass._id,
+        date: {
+          $gte: startOfDay,
+          $lte: endOfDay
+        }
+      })
+        .populate("subject_id", "name")
+        .populate("teacher_id", "first_name last_name")
+        .sort({ date: -1 }); // Pokud je více známek, vezmeme nejnovější
+
+      if (grade) {
+        lessonDetail.grade = {
+          value: grade.value === 0 ? 0 : grade.value,
+          weight: grade.weight,
+          description: grade.description || ""
+        };
       }
     }
 
